@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Go Fish &mdash; P2P</title>
+  <link rel="stylesheet" href="./gofish.css" />
+</head>
+<body>
+  <a class="home-link" href="../">&larr; Game Room</a>
+  <h1 class="title">Go Fish</h1>
+
+  <!-- ============ SETUP / CONNECTION ============ -->
+  <section id="setup" class="panel">
+    <div id="setup-choose">
+      <p class="lead">Play Go Fish peer-to-peer. One person hosts (and deals); everyone else joins by trading codes &mdash; paste over text, Discord, anywhere.</p>
+      <div class="row">
+        <input id="name-input" placeholder="Your name" maxlength="16" />
+      </div>
+      <div class="row">
+        <button id="btn-host" class="primary">Host a game</button>
+        <button id="btn-join">Join a game</button>
+      </div>
+    </div>
+
+    <!-- HOST: accept players -->
+    <div id="setup-host" class="hidden">
+      <h3>Host &mdash; add players</h3>
+      <p class="hint">Each friend sends you their <b>join code</b>. Paste it below, generate a reply, and send the reply back to them. Repeat for every player.</p>
+      <textarea id="host-guest-code" placeholder="Paste a player's join code here"></textarea>
+      <button id="btn-host-accept">Generate reply code</button>
+      <div id="host-reply-wrap" class="hidden">
+        <label>Send this reply code back to that player:</label>
+        <textarea id="host-reply-code" readonly></textarea>
+        <button id="btn-copy-reply" class="copy">Copy reply</button>
+      </div>
+      <p class="hint" id="host-connected-count">Connected players: 1 (you)</p>
+    </div>
+
+    <!-- GUEST: create join code, paste reply -->
+    <div id="setup-guest" class="hidden">
+      <h3>Join a game</h3>
+      <p class="hint">Step 1 &mdash; send this join code to the host:</p>
+      <textarea id="guest-offer-code" readonly placeholder="Generating..."></textarea>
+      <button id="btn-copy-offer" class="copy">Copy join code</button>
+      <p class="hint">Step 2 &mdash; paste the host's reply code here:</p>
+      <textarea id="guest-answer-code" placeholder="Paste the host's reply code"></textarea>
+      <button id="btn-guest-connect" class="primary">Connect</button>
+    </div>
+  </section>
+
+  <!-- ============ LOBBY ============ -->
+  <section id="lobby" class="panel hidden">
+    <h3>Lobby</h3>
+    <ul id="lobby-players"></ul>
+    <div id="lobby-host-controls" class="hidden">
+      <button id="btn-start" class="primary">Start game</button>
+    </div>
+    <p id="lobby-guest-msg" class="hint hidden">Waiting for the host to start the game&hellip;</p>
+  </section>
+
+  <!-- ============ TABLE ============ -->
+  <section id="table" class="hidden">
+    <div id="opponents" class="opponents"></div>
+
+    <div class="board">
+      <div id="pond" class="pond"></div>
+      <div id="table-msg" class="table-msg"></div>
+    </div>
+
+    <div id="me" class="me"></div>
+
+    <div id="ask" class="ask hidden">
+      <p class="ask-hint" id="ask-hint"></p>
+      <div id="ask-hand" class="ask-hand"></div>
+    </div>
+
+    <div id="host-controls" class="host-controls hidden">
+      <button id="btn-new-game" class="primary">New game</button>
+    </div>
+  </section>
+
+  <section class="panel log-panel">
+    <h3>Log</h3>
+    <div id="log" class="log"></div>
+  </section>
+
+  <script src="./rtc.js"></script>
+  <script src="./gofish.js"></script>
+</body>
+</html>

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Texas Hold'em &mdash; P2P</title>
+  <link rel="stylesheet" href="./poker.css" />
+</head>
+<body>
+  <a class="home-link" href="../">&larr; Game Room</a>
+  <h1 class="title">Texas Hold'em</h1>
+
+  <!-- ============ SETUP / CONNECTION ============ -->
+  <section id="setup" class="panel">
+    <div id="setup-choose">
+      <p class="lead">Play poker peer-to-peer. One person hosts (and deals); everyone else joins by trading codes &mdash; paste over text, Discord, anywhere.</p>
+      <div class="row">
+        <input id="name-input" placeholder="Your name" maxlength="16" />
+      </div>
+      <div class="row">
+        <button id="btn-host" class="primary">Host a table</button>
+        <button id="btn-join">Join a table</button>
+      </div>
+    </div>
+
+    <!-- HOST: accept players -->
+    <div id="setup-host" class="hidden">
+      <h3>Host &mdash; add players</h3>
+      <p class="hint">Each friend sends you their <b>join code</b>. Paste it below, generate a reply, and send the reply back to them. Repeat for every player.</p>
+      <textarea id="host-guest-code" placeholder="Paste a player's join code here"></textarea>
+      <button id="btn-host-accept">Generate reply code</button>
+      <div id="host-reply-wrap" class="hidden">
+        <label>Send this reply code back to that player:</label>
+        <textarea id="host-reply-code" readonly></textarea>
+        <button id="btn-copy-reply" class="copy">Copy reply</button>
+      </div>
+      <p class="hint" id="host-connected-count">Connected players: 1 (you)</p>
+    </div>
+
+    <!-- GUEST: create join code, paste reply -->
+    <div id="setup-guest" class="hidden">
+      <h3>Join a table</h3>
+      <p class="hint">Step 1 &mdash; send this join code to the host:</p>
+      <textarea id="guest-offer-code" readonly placeholder="Generating..."></textarea>
+      <button id="btn-copy-offer" class="copy">Copy join code</button>
+      <p class="hint">Step 2 &mdash; paste the host's reply code here:</p>
+      <textarea id="guest-answer-code" placeholder="Paste the host's reply code"></textarea>
+      <button id="btn-guest-connect" class="primary">Connect</button>
+    </div>
+  </section>
+
+  <!-- ============ LOBBY ============ -->
+  <section id="lobby" class="panel hidden">
+    <h3>Lobby</h3>
+    <ul id="lobby-players"></ul>
+    <div id="lobby-host-controls" class="hidden">
+      <label>Starting chips <input id="cfg-chips" type="number" value="1000" min="10" /></label>
+      <label>Small blind <input id="cfg-sb" type="number" value="5" min="1" /></label>
+      <label>Big blind <input id="cfg-bb" type="number" value="10" min="2" /></label>
+      <button id="btn-start" class="primary">Start hand</button>
+    </div>
+    <p id="lobby-guest-msg" class="hint hidden">Waiting for the host to start the hand&hellip;</p>
+  </section>
+
+  <!-- ============ TABLE ============ -->
+  <section id="table" class="hidden">
+    <div id="opponents" class="opponents"></div>
+
+    <div class="board">
+      <div id="community" class="community"></div>
+      <div id="pot" class="pot"></div>
+      <div id="table-msg" class="table-msg"></div>
+    </div>
+
+    <div id="me" class="me"></div>
+
+    <div id="actions" class="actions hidden">
+      <div class="bet-controls hidden" id="bet-controls">
+        <input type="range" id="bet-slider" />
+        <input type="number" id="bet-amount" />
+      </div>
+      <div class="action-buttons">
+        <button id="act-fold" class="danger">Fold</button>
+        <button id="act-check">Check</button>
+        <button id="act-call">Call</button>
+        <button id="act-bet" class="primary">Bet</button>
+        <button id="act-raise" class="primary">Raise</button>
+        <button id="act-allin" class="warn">All-in</button>
+      </div>
+    </div>
+
+    <div id="host-controls" class="host-controls hidden">
+      <button id="btn-next-hand" class="primary">Next hand</button>
+    </div>
+  </section>
+
+  <section class="panel log-panel">
+    <h3>Log</h3>
+    <div id="log" class="log"></div>
+  </section>
+
+  <script src="./rtc.js"></script>
+  <script src="./handeval.js"></script>
+  <script src="./poker.js"></script>
+</body>
+</html>
