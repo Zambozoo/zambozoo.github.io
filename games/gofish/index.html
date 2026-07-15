@@ -4,10 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Go Fish &mdash; P2P</title>
+  <link rel="stylesheet" href="../shared/table.css" />
   <link rel="stylesheet" href="./gofish.css" />
 </head>
 <body>
-  <a class="home-link" href="../">&larr; Game Room</a>
+  <a class="home-link" href="../../">&larr; Game Room</a>
   <h1 class="title">Go Fish</h1>
 
   <!-- ============ SETUP / CONNECTION ============ -->
@@ -59,24 +60,30 @@
     <p id="lobby-guest-msg" class="hint hidden">Waiting for the host to start the game&hellip;</p>
   </section>
 
-  <!-- ============ TABLE ============ -->
+  <!-- ============ TABLE (standardized zones) ============ -->
   <section id="table" class="hidden">
     <div id="opponents" class="opponents"></div>
 
-    <div class="board">
-      <div id="pond" class="pond"></div>
+    <div class="felt">
+      <div id="shared" class="zone cards" data-label="Shared"></div>
+      <div class="felt-row">
+        <div id="deck" class="zone" data-label="Pond"></div>
+        <div id="discard" class="zone" data-label="Discard"></div>
+      </div>
       <div id="table-msg" class="table-msg"></div>
     </div>
 
-    <div id="me" class="me"></div>
-
-    <div id="ask" class="ask hidden">
-      <p class="ask-hint" id="ask-hint"></p>
-      <div id="ask-hand" class="ask-hand"></div>
+    <div class="self">
+      <div id="my-play" class="zone cards" data-label="Your books"></div>
+      <div id="me" class="me"></div>
+      <div id="my-hand" class="zone cards hand" data-label="Your hand"></div>
     </div>
 
-    <div id="host-controls" class="host-controls hidden">
-      <button id="btn-new-game" class="primary">New game</button>
+    <div id="controls" class="controls">
+      <p class="control-hint hidden" id="ask-hint"></p>
+      <div id="host-controls" class="host-controls hidden">
+        <button id="btn-new-game" class="primary">New game</button>
+      </div>
     </div>
   </section>
 
@@ -85,7 +92,8 @@
     <div id="log" class="log"></div>
   </section>
 
-  <script src="./rtc.js"></script>
+  <script src="../shared/rtc.js"></script>
+  <script src="../shared/table.js"></script>
   <script src="./gofish.js"></script>
 </body>
 </html>

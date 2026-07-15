@@ -1,0 +1,19 @@
+/* Texas Hold'em theme — green felt. Layout/components live in shared/table.css. */
+:root {
+  --panel: #16233a;
+  --border: #2c3852;
+  --text: #eef4f0;
+  --muted: #9fb3ab;
+  --accent: #4ade80;
+  --gold: #f5c451;
+  --felt: #0f5137;
+  --felt-edge: #0a2c20;
+  --input-bg: #0e1626;
+  --btn-bg: #26344f;
+  --btn-primary: #1f7a4d;
+  --btn-primary-border: #2fa869;
+  --page-bg: radial-gradient(circle at 50% -10%, #14634a 0%, #072318 70%);
+  --back-a: #22406e;
+  --back-b: #1a3159;
+  --back-border: #4a6aa5;
+}

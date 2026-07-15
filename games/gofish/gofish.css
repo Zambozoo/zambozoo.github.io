@@ -1,0 +1,19 @@
+/* Go Fish theme — blue water. Layout/components live in shared/table.css. */
+:root {
+  --panel: #12293b;
+  --border: #26455c;
+  --text: #eaf4f7;
+  --muted: #92b3c0;
+  --accent: #38bdf8;
+  --gold: #f5c451;
+  --felt: #0e4d63;
+  --felt-edge: #062230;
+  --input-bg: #0a1a26;
+  --btn-bg: #1d3a4f;
+  --btn-primary: #0e7490;
+  --btn-primary-border: #2596be;
+  --page-bg: radial-gradient(circle at 50% -10%, #10617e 0%, #041824 70%);
+  --back-a: #1c5e78;
+  --back-b: #144859;
+  --back-border: #3d86a5;
+}

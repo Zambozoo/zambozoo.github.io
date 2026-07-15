@@ -1,0 +1,184 @@
+/* ============================================================
+   Shared card-game table framework.
+   Games load this first, then a small theme sheet that overrides
+   the CSS variables below. Layout is standardized into named zones:
+     opponents · shared · deck · discard · play · hand
+   Any zone with no contents hides itself, so a game only fills the
+   zones it actually uses.
+   ============================================================ */
+:root {
+  --panel: #16233a;
+  --border: #2c3852;
+  --text: #eef4f0;
+  --muted: #9fb3ab;
+  --accent: #4ade80;
+  --gold: #f5c451;
+  --danger: #ef5350;
+  --warn: #ff9e43;
+  --felt: #0f5137;
+  --felt-edge: #0a2c20;
+  --input-bg: #0e1626;
+  --btn-bg: #26344f;
+  --btn-primary: #1f7a4d;
+  --btn-primary-border: #2fa869;
+  --page-bg: radial-gradient(circle at 50% -10%, #14634a 0%, #072318 70%);
+  --back-a: #22406e;
+  --back-b: #1a3159;
+  --back-border: #4a6aa5;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: var(--page-bg);
+  color: var(--text);
+  min-height: 100vh;
+  padding: 1rem;
+}
+.home-link { color: var(--muted); text-decoration: none; font-size: 0.9rem; }
+.home-link:hover { color: var(--accent); }
+.title { text-align: center; margin: 0.5rem 0 1.5rem; font-size: 2rem; letter-spacing: -0.02em; }
+.hidden { display: none !important; }
+
+/* ===== Panels / setup / lobby ===== */
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1.25rem;
+  max-width: 640px;
+  margin: 0 auto 1.25rem;
+}
+.lead { color: var(--muted); margin-bottom: 1rem; line-height: 1.5; }
+.hint { color: var(--muted); font-size: 0.88rem; margin: 0.6rem 0; line-height: 1.45; }
+h3 { margin-bottom: 0.75rem; }
+label { color: var(--muted); font-size: 0.85rem; }
+
+.row { display: flex; gap: 0.6rem; margin-bottom: 0.75rem; flex-wrap: wrap; }
+input, textarea, button { font-family: inherit; font-size: 0.95rem; }
+input[type="text"], input:not([type]), #name-input {
+  background: var(--input-bg); border: 1px solid var(--border); color: var(--text);
+  border-radius: 8px; padding: 0.55rem 0.7rem;
+}
+input[type="number"] {
+  background: var(--input-bg); border: 1px solid var(--border); color: var(--text);
+  border-radius: 8px; padding: 0.4rem 0.5rem; width: 90px;
+}
+#name-input { flex: 1; min-width: 160px; }
+textarea {
+  width: 100%; min-height: 74px; resize: vertical;
+  background: var(--input-bg); border: 1px solid var(--border); color: var(--text);
+  border-radius: 8px; padding: 0.6rem; margin-bottom: 0.5rem;
+  font-family: ui-monospace, Menlo, monospace; font-size: 0.78rem; word-break: break-all;
+}
+button {
+  background: var(--btn-bg); color: var(--text); border: 1px solid var(--border);
+  border-radius: 8px; padding: 0.55rem 1rem; cursor: pointer; transition: filter 0.12s, background 0.12s;
+}
+button:hover { filter: brightness(1.15); }
+button:disabled { opacity: 0.4; cursor: not-allowed; }
+button.primary { background: var(--btn-primary); border-color: var(--btn-primary-border); }
+button.danger { background: #7a2422; border-color: var(--danger); }
+button.warn { background: #8a5216; border-color: var(--warn); }
+button.copy { background: #2a3b57; font-size: 0.85rem; padding: 0.4rem 0.8rem; }
+
+#lobby-players, #lobby-players li { list-style: none; }
+#lobby-players li {
+  padding: 0.5rem 0.75rem; background: var(--input-bg); border-radius: 8px; margin-bottom: 0.4rem;
+  display: flex; justify-content: space-between;
+}
+#lobby-host-controls { display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center; margin-top: 1rem; }
+#lobby-host-controls label { display: flex; flex-direction: column; gap: 0.2rem; }
+
+/* ============================================================
+   TABLE — standardized zones
+   ============================================================ */
+#table { max-width: 1000px; margin: 0 auto; }
+
+.opponents { display: flex; flex-wrap: wrap; gap: 0.75rem; justify-content: center; margin-bottom: 1rem; }
+
+/* Communal middle: shared cards, plus the deck + discard piles. */
+.felt {
+  background: radial-gradient(ellipse at center, var(--felt) 0%, var(--felt-edge) 120%);
+  border: 6px solid var(--felt-edge); border-radius: 90px;
+  padding: 1.75rem 1rem; margin: 0 auto 1.25rem; max-width: 700px;
+  display: flex; flex-direction: column; align-items: center; gap: 1rem;
+}
+.felt-row { display: flex; justify-content: center; align-items: flex-end; gap: 2rem; flex-wrap: wrap; }
+
+/* Self: the play area in front of you, your seat, and your hand. */
+.self { display: flex; flex-direction: column; align-items: center; gap: 1rem; margin-bottom: 1rem; }
+.me { display: flex; justify-content: center; }
+.me .seat { min-width: 200px; border-color: var(--accent); }
+
+/* A zone is a labeled slot for cards. Empty zones disappear. */
+.zone { position: relative; min-height: 0; }
+.zone:empty { display: none; }
+.zone[data-label]:not(:empty)::before {
+  content: attr(data-label);
+  position: absolute; top: -1.15rem; left: 50%; transform: translateX(-50%);
+  font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.07em;
+  color: var(--muted); white-space: nowrap;
+}
+.zone .cards, .zone.cards { display: flex; gap: 6px; justify-content: center; align-items: flex-end; flex-wrap: wrap; }
+.hand.cards { min-height: 62px; }
+
+/* pile = deck / discard: a stacked look with a count badge */
+.pile { display: flex; flex-direction: column; align-items: center; gap: 0.35rem; }
+.pile .pile-count { font-size: 0.8rem; color: var(--muted); }
+.shared .pot, .shared .stake { color: var(--gold); font-size: 1.05rem; font-weight: 600; margin-top: 0.5rem; }
+
+.table-msg { color: var(--text); min-height: 1.2em; font-size: 0.95rem; text-align: center; }
+
+/* ===== Seats ===== */
+.seat {
+  background: var(--panel); border: 2px solid var(--border); border-radius: 12px;
+  padding: 0.6rem 0.75rem; min-width: 130px; text-align: center; position: relative;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.seat.turn { border-color: var(--gold); box-shadow: 0 0 14px rgba(245,196,81,0.5); }
+.seat.folded { opacity: 0.45; }
+.seat.selectable { cursor: pointer; }
+.seat.selectable:hover { border-color: var(--accent); }
+.seat.selected { border-color: var(--accent); box-shadow: 0 0 14px rgba(56,189,248,0.6); }
+.seat .seat-name { font-weight: 600; font-size: 0.95rem; display: flex; align-items: center; justify-content: center; gap: 0.35rem; }
+.seat .seat-info { color: var(--accent); font-size: 0.88rem; margin-top: 0.15rem; }
+.seat .seat-sub { color: var(--gold); font-size: 0.82rem; min-height: 1em; margin-top: 0.15rem; }
+.seat .seat-action { color: var(--muted); font-size: 0.75rem; min-height: 1em; }
+.seat .dealer-btn {
+  position: absolute; top: -8px; right: -8px; width: 24px; height: 24px; border-radius: 50%;
+  background: #fff; color: #111; font-weight: 700; font-size: 0.75rem; line-height: 24px;
+}
+.seat .cards { margin-top: 0.4rem; min-height: 46px; }
+.seat .cards.mini .card { width: 22px; height: 30px; }
+
+/* ===== Cards ===== */
+.card {
+  width: 34px; height: 46px; border-radius: 5px; background: #fbfbf5;
+  color: #111; display: inline-flex; flex-direction: column; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 0.7rem; box-shadow: 0 1px 3px rgba(0,0,0,0.4); line-height: 1;
+}
+.card .r { font-size: 0.9rem; }
+.card.red { color: #d21f1f; }
+.card.back {
+  background: repeating-linear-gradient(45deg, var(--back-a), var(--back-a) 4px, var(--back-b) 4px, var(--back-b) 8px);
+  border: 2px solid var(--back-border);
+}
+.card.big { width: 46px; height: 62px; font-size: 0.85rem; }
+.card.big .r { font-size: 1.2rem; }
+.card.askable { cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; }
+.card.askable:hover { transform: translateY(-6px); box-shadow: 0 4px 10px rgba(56,189,248,0.6); }
+
+/* ===== Controls (game-specific action bar) ===== */
+.controls { max-width: 640px; margin: 0 auto 1rem; }
+.control-hint { color: var(--muted); font-size: 0.9rem; margin-bottom: 0.75rem; text-align: center; }
+.bet-controls { display: flex; gap: 0.75rem; align-items: center; margin-bottom: 0.75rem; }
+.bet-controls input[type="range"] { flex: 1; }
+.action-buttons { display: flex; gap: 0.6rem; flex-wrap: wrap; justify-content: center; }
+.action-buttons button { min-width: 90px; }
+.host-controls { text-align: center; margin: 0.75rem 0; }
+
+/* ===== Log ===== */
+.log-panel { max-width: 640px; }
+.log { max-height: 180px; overflow-y: auto; font-size: 0.85rem; color: var(--muted); }
+.log div { padding: 0.15rem 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+.log .hl { color: var(--accent); }

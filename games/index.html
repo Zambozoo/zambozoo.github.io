@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Games &mdash; zambozoo</title>
+  <style>
+    :root {
+      --bg: #0f1420;
+      --panel: #1a2233;
+      --panel-hover: #232f47;
+      --accent: #4ade80;
+      --text: #e8edf5;
+      --muted: #8a96ad;
+      --border: #2c3852;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: radial-gradient(circle at 50% 0%, #17203a 0%, var(--bg) 60%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+    .topbar {
+      position: sticky; top: 0; z-index: 30;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.9rem 1.25rem;
+      background: rgba(15, 20, 32, 0.85);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+    }
+    .brand { font-weight: 700; font-size: 1.15rem; letter-spacing: -0.01em; color: var(--text); text-decoration: none; }
+    .brand .accent { color: var(--accent); }
+    .nav-toggle {
+      display: inline-flex; flex-direction: column; justify-content: center; gap: 5px;
+      width: 44px; height: 44px; padding: 0 10px;
+      background: transparent; border: 1px solid var(--border); border-radius: 10px; cursor: pointer;
+    }
+    .nav-toggle span { display: block; height: 2px; width: 100%; background: var(--text); border-radius: 2px; transition: transform 0.25s ease, opacity 0.25s ease; }
+    body.nav-open .nav-toggle span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    body.nav-open .nav-toggle span:nth-child(2) { opacity: 0; }
+    body.nav-open .nav-toggle span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+    .nav-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); opacity: 0; visibility: hidden; transition: opacity 0.25s ease, visibility 0.25s ease; z-index: 40; }
+    body.nav-open .nav-overlay { opacity: 1; visibility: visible; }
+    .nav-panel {
+      position: fixed; top: 0; right: 0; height: 100%; width: min(300px, 80vw);
+      background: var(--panel); border-left: 1px solid var(--border);
+      transform: translateX(100%); transition: transform 0.28s ease; z-index: 50;
+      display: flex; flex-direction: column; padding: 1.25rem;
+    }
+    body.nav-open .nav-panel { transform: translateX(0); }
+    .nav-panel .nav-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+    .nav-panel .nav-head span { color: var(--muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; }
+    .nav-close { background: transparent; border: none; color: var(--muted); font-size: 1.6rem; line-height: 1; cursor: pointer; }
+    .nav-panel a { display: flex; align-items: center; gap: 0.75rem; padding: 0.85rem 0.75rem; border-radius: 12px; color: var(--text); text-decoration: none; font-size: 1.05rem; transition: background 0.15s ease; }
+    .nav-panel a:hover { background: var(--panel-hover); }
+    .nav-panel a .ico { font-size: 1.3rem; }
+
+    .wrap { padding: 2rem 1rem 4rem; }
+    header { text-align: center; margin: 2.5rem auto 3rem; max-width: 720px; }
+    header h1 { font-size: clamp(2rem, 6vw, 3.25rem); letter-spacing: -0.02em; }
+    header h1 .accent { color: var(--accent); }
+    header p { color: var(--muted); margin-top: 0.75rem; font-size: 1.05rem; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1.25rem; max-width: 960px; margin: 0 auto; }
+    .card {
+      display: flex; flex-direction: column;
+      background: var(--panel); border: 1px solid var(--border); border-radius: 16px;
+      padding: 1.5rem; text-decoration: none; color: inherit;
+      transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease; min-height: 160px;
+    }
+    .card:hover { transform: translateY(-4px); background: var(--panel-hover); border-color: var(--accent); }
+    .card .icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+    .card h2 { font-size: 1.35rem; margin-bottom: 0.35rem; }
+    .card p { color: var(--muted); font-size: 0.95rem; flex: 1; }
+    .card .tag { align-self: flex-start; margin-top: 1rem; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--accent); border: 1px solid var(--accent); border-radius: 999px; padding: 0.2rem 0.6rem; }
+    .card.soon { opacity: 0.55; cursor: default; }
+    .card.soon:hover { transform: none; border-color: var(--border); background: var(--panel); }
+    .card.soon .tag { color: var(--muted); border-color: var(--muted); }
+    footer { text-align: center; color: var(--muted); font-size: 0.85rem; margin-top: 3rem; }
+  </style>
+</head>
+<body>
+  <nav class="topbar">
+    <a class="brand" href="../"><span class="accent">zambo</span>zoo</a>
+    <button class="nav-toggle" id="navToggle" aria-label="Menu" aria-controls="navPanel" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+
+  <div class="nav-overlay" id="navOverlay"></div>
+  <aside class="nav-panel" id="navPanel">
+    <div class="nav-head">
+      <span>Navigate</span>
+      <button class="nav-close" id="navClose" aria-label="Close menu">&times;</button>
+    </div>
+    <a href="../"><span class="ico">&#127968;</span> Home</a>
+    <a href="../games/"><span class="ico">&#127918;</span> Games</a>
+    <a href="../docs/"><span class="ico">&#128196;</span> Docs</a>
+    <a href="../portfolio/"><span class="ico">&#128188;</span> Portfolio</a>
+  </aside>
+
+  <div class="wrap">
+    <header>
+      <h1>The <span class="accent">Game</span> Room</h1>
+      <p>Peer-to-peer browser games. No server, no accounts &mdash; just share a code with your friends and play.</p>
+    </header>
+
+    <!-- To add a game: copy a card block below and point href at the new game's folder. -->
+    <main class="grid">
+      <a class="card" href="./poker/">
+        <div class="icon">&#9824;&#65039;</div>
+        <h2>Texas Hold'em</h2>
+        <p>Full poker with blinds, betting rounds, and showdowns. Host deals, everyone connects peer-to-peer.</p>
+        <span class="tag">Play</span>
+      </a>
+
+      <a class="card" href="./gofish/">
+        <div class="icon">&#128031;</div>
+        <h2>Go Fish</h2>
+        <p>The classic. Ask opponents for ranks, collect books of four, and don&rsquo;t get sent fishing. Host deals from the pond.</p>
+        <span class="tag">Play</span>
+      </a>
+
+      <a class="card" href="./hanabi/">
+        <div class="icon">&#127878;</div>
+        <h2>Hanabi</h2>
+        <p>Cooperative fireworks. You can&rsquo;t see your own hand &mdash; give hints, play in order, and build all five suits from 1 to 5.</p>
+        <span class="tag">Play</span>
+      </a>
+
+      <div class="card soon">
+        <div class="icon">&#127183;</div>
+        <h2>More coming</h2>
+        <p>Add your next game by dropping a folder and a card link here.</p>
+        <span class="tag">Soon</span>
+      </div>
+    </main>
+
+    <footer>
+      Runs entirely in your browser via WebRTC. Hosted on GitHub Pages.
+    </footer>
+  </div>
+
+  <script>
+    (function () {
+      var body = document.body;
+      var toggle = document.getElementById('navToggle');
+      var closeBtn = document.getElementById('navClose');
+      var overlay = document.getElementById('navOverlay');
+      function open() { body.classList.add('nav-open'); toggle.setAttribute('aria-expanded', 'true'); }
+      function close() { body.classList.remove('nav-open'); toggle.setAttribute('aria-expanded', 'false'); }
+      toggle.addEventListener('click', function () { body.classList.contains('nav-open') ? close() : open(); });
+      closeBtn.addEventListener('click', close);
+      overlay.addEventListener('click', close);
+      document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
+    })();
+  </script>
+</body>
+</html>

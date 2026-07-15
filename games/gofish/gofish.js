@@ -2,118 +2,9 @@
 // Go Fish over manual-signaling WebRTC.
 // The HOST runs the authoritative engine and deals; GUESTS send asks and
 // render the state the host broadcasts. Host is also a player (id 0).
-
-const $ = (id) => document.getElementById(id);
-const SUITS = ["♠", "♥", "♦", "♣"]; // spade heart diamond club
-const RANK_STR = { 11: "J", 12: "Q", 13: "K", 14: "A" };
-
-function rankLabel(r) { return RANK_STR[r] || String(r); }
-
-function cardEl(card, opts = {}) {
-  const el = document.createElement("div");
-  el.className = "card" + (opts.big ? " big" : "");
-  if (!card) { el.classList.add("back"); return el; }
-  if (card.suit === 1 || card.suit === 2) el.classList.add("red");
-  el.innerHTML = `<span class="r">${rankLabel(card.rank)}</span><span>${SUITS[card.suit]}</span>`;
-  return el;
-}
-
-function makeDeck() {
-  const d = [];
-  for (let s = 0; s < 4; s++) for (let r = 2; r <= 14; r++) d.push({ rank: r, suit: s });
-  for (let i = d.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [d[i], d[j]] = [d[j], d[i]];
-  }
-  return d;
-}
-
-function log(msg, hl) {
-  const el = document.createElement("div");
-  if (hl) el.className = "hl";
-  el.textContent = msg;
-  $("log").prepend(el);
-}
-
-// ============================================================
-// NETWORK LAYER
-// ============================================================
-const Net = {
-  role: null,          // 'host' | 'guest'
-  myName: "",
-  links: [],           // host: PeerLink per guest
-  nextGuestId: 1,
-  link: null,          // guest: single link to host
-  myId: null,
-};
-
-// -------- HOST networking --------
-function hostAcceptGuest(guestCode) {
-  const id = Net.nextGuestId++;
-  const link = new RTC.PeerLink({
-    onOpen: () => {},
-    onMessage: (msg, lnk) => hostOnMessage(msg, lnk),
-    onClose: (lnk) => hostOnClose(lnk),
-  });
-  link.id = id;
-  Net.links.push(link);
-  return link.initHost(guestCode);
-}
-
-function hostOnMessage(msg, link) {
-  if (msg.t === "join") {
-    Engine.addPlayer(link.id, msg.name);
-    link.send({ t: "welcome", id: link.id });
-    updateHostConnCount();
-    if (Engine.phase !== "lobby") Engine.broadcast();
-  } else if (msg.t === "ask") {
-    Engine.handleAsk(link.id, msg.targetId, msg.rank);
-  }
-}
-
-function hostOnClose(link) {
-  Engine.removePlayer(link.id);
-  if (Engine.phase === "lobby") updateHostConnCount();
-}
-
-function sendToPlayer(pid, obj) {
-  if (pid === 0) return; // host renders locally
-  const link = Net.links.find((l) => l.id === pid);
-  if (link) link.send(obj);
-}
-
-// -------- GUEST networking --------
-async function guestCreateOffer() {
-  Net.link = new RTC.PeerLink({
-    onOpen: () => Net.link.send({ t: "join", name: Net.myName }),
-    onMessage: (msg) => guestOnMessage(msg),
-    onClose: () => { $("table-msg").textContent = "Disconnected from host."; },
-  });
-  return Net.link.initGuest();
-}
-
-function guestOnMessage(msg) {
-  if (msg.t === "welcome") {
-    Net.myId = msg.id;
-    show("lobby");
-    $("lobby-guest-msg").classList.remove("hidden");
-  } else if (msg.t === "state") {
-    renderState(msg.state);
-  } else if (msg.t === "log") {
-    log(msg.msg, msg.hl);
-  }
-}
-
-// Route a local (host) ask or forward a guest ask.
-function submitAsk(targetId, rank) {
-  if (Net.role === "host") Engine.handleAsk(0, targetId, rank);
-  else Net.link.send({ t: "ask", targetId, rank });
-}
-
-function broadcastLog(msg, hl) {
-  log(msg, hl);
-  for (const l of Net.links) l.send({ t: "log", msg, hl });
-}
+//
+// Shared plumbing (networking, card rendering, deck, setup/lobby wiring)
+// lives in ../shared/table.js. This file is Go Fish's engine + rendering.
 
 // ============================================================
 // GAME ENGINE (host only)
@@ -350,12 +241,21 @@ function renderState(state) {
     opp.appendChild(seatEl(s, false, myTurn));
   }
 
-  // me
+  // me seat (cards render in the hand zone)
   $("me").innerHTML = "";
   if (mySeat) $("me").appendChild(seatEl(mySeat, true, false));
 
-  // pond
-  $("pond").textContent = `Pond: ${state.pond} card${state.pond === 1 ? "" : "s"}`;
+  // play area: my completed books, laid face up in front of me
+  const play = $("my-play");
+  play.innerHTML = "";
+  if (mySeat) for (const r of mySeat.books) play.appendChild(cardEl({ rank: r, suit: 0 }, { big: true }));
+
+  // deck zone: the pond (face down)
+  renderPile($("deck"), "Pond", state.pond, null);
+
+  // go fish has no shared cards or discard; those zones stay empty (hidden)
+  $("shared").innerHTML = "";
+  $("discard").innerHTML = "";
 
   // message
   let msg = "";
@@ -371,7 +271,7 @@ function renderState(state) {
   }
   $("table-msg").textContent = msg;
 
-  renderAsk(state, mySeat, myTurn);
+  renderHand(state, mySeat, myTurn);
 
   if (Net.role === "host") {
     $("host-controls").classList.toggle("hidden", state.phase !== "gameover");
@@ -385,15 +285,13 @@ function seatEl(s, isMe, selectable) {
   let cls = "seat" + (s.isTurn ? " turn" : "");
   if (selectable) { cls += " selectable"; if (s.id === selectedTarget) cls += " selected"; }
   el.className = cls;
-  const bookStr = s.books.length ? "Books: " + s.books.map(rankLabel).join(", ") : "";
+  const bookStr = (!isMe && s.books.length) ? "Books: " + s.books.map(rankLabel).join(", ") : "";
   el.innerHTML = `
     <div class="seat-name">${escapeHtml(s.name)}${isMe ? " (you)" : ""}</div>
-    <div class="seat-count">${s.cardCount} card${s.cardCount === 1 ? "" : "s"}</div>
-    <div class="seat-books">${escapeHtml(bookStr)}</div>`;
+    <div class="seat-info">${s.cardCount} card${s.cardCount === 1 ? "" : "s"}</div>
+    <div class="seat-sub">${escapeHtml(bookStr)}</div>`;
 
-  if (isMe) {
-    // handled by the ask area / my-hand render below
-  } else {
+  if (!isMe) {
     const cards = document.createElement("div");
     cards.className = "cards";
     for (let i = 0; i < s.cardCount; i++) cards.appendChild(cardEl(null));
@@ -405,22 +303,23 @@ function seatEl(s, isMe, selectable) {
   return el;
 }
 
-function renderAsk(state, mySeat, myTurn) {
-  const box = $("ask");
-  box.classList.toggle("hidden", !mySeat || state.phase !== "playing");
-  const handWrap = $("ask-hand");
+// Render my hand into the hand zone; when it's my turn and a target is
+// picked, cards become clickable to ask for that rank.
+function renderHand(state, mySeat, myTurn) {
+  const hint = $("ask-hint");
+  const handWrap = $("my-hand");
   handWrap.innerHTML = "";
 
-  if (!mySeat) return;
+  if (!mySeat || state.phase !== "playing") { hint.classList.add("hidden"); return; }
+  hint.classList.remove("hidden");
 
-  // instruction
   if (myTurn) {
     const tName = selectedTarget != null ? nameOf(state, selectedTarget) : null;
-    $("ask-hint").textContent = tName
+    hint.textContent = tName
       ? `Select a player above, then click a card to ask ${tName} for that rank.`
       : "No opponents have cards to ask.";
   } else {
-    $("ask-hint").textContent = "Your cards:";
+    hint.textContent = "Your cards:";
   }
 
   for (const c of state.hand) {
@@ -430,19 +329,6 @@ function renderAsk(state, mySeat, myTurn) {
       el.onclick = () => submitAsk(selectedTarget, c.rank);
     }
     handWrap.appendChild(el);
-  }
-}
-
-function escapeHtml(str) {
-  return String(str).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-}
-
-// ============================================================
-// VIEW SWITCHING
-// ============================================================
-function show(which) {
-  for (const s of ["setup", "lobby", "table"]) {
-    $(s).classList.toggle("hidden", which !== s);
   }
 }
 
@@ -462,63 +348,36 @@ function updateHostConnCount() {
   renderLobby();
 }
 
-// ============================================================
-// EVENT WIRING
-// ============================================================
-function setName() {
-  const n = $("name-input").value.trim();
-  return n || "Player";
+// Route a local (host) ask or forward a guest ask.
+function submitAsk(targetId, rank) {
+  if (Net.role === "host") Engine.handleAsk(0, targetId, rank);
+  else Net.link.send({ t: "ask", targetId, rank });
 }
 
-$("btn-host").onclick = () => {
-  Net.role = "host";
-  Net.myName = setName();
-  Engine.addPlayer(0, Net.myName); // host is seat 0
-  $("setup-choose").classList.add("hidden");
-  $("setup-host").classList.remove("hidden");
-  $("lobby").classList.remove("hidden");
-  $("lobby-host-controls").classList.remove("hidden");
-  renderLobby();
-  log("You are hosting. Add players, then Start game.", true);
-};
-
-$("btn-join").onclick = async () => {
-  Net.role = "guest";
-  Net.myName = setName();
-  $("setup-choose").classList.add("hidden");
-  $("setup-guest").classList.remove("hidden");
-  $("guest-offer-code").value = "Generating…";
-  const code = await guestCreateOffer();
-  $("guest-offer-code").value = code;
-};
-
-$("btn-host-accept").onclick = async () => {
-  const code = $("host-guest-code").value.trim();
-  if (!code) return;
-  try {
-    const reply = await hostAcceptGuest(code);
-    $("host-reply-code").value = reply;
-    $("host-reply-wrap").classList.remove("hidden");
-    $("host-guest-code").value = "";
-  } catch (e) {
-    alert("Couldn't read that join code. Make sure it was copied fully.");
-  }
-};
-
-$("btn-guest-connect").onclick = async () => {
-  const code = $("guest-answer-code").value.trim();
-  if (!code) return;
-  try { await Net.link.acceptRemoteCode(code); }
-  catch (e) { alert("Couldn't read that reply code. Make sure it was copied fully."); }
-};
+// ============================================================
+// FRAMEWORK HOOKS + EVENT WIRING
+// ============================================================
+Table.configure({
+  onHost() {
+    Engine.addPlayer(0, Net.myName); // host is seat 0
+    renderLobby();
+    log("You are hosting. Add players, then Start game.", true);
+  },
+  onJoin(id, name, link) {
+    Engine.addPlayer(id, name);
+    link.send({ t: "welcome", id });
+    updateHostConnCount();
+    if (Engine.phase !== "lobby") Engine.broadcast();
+  },
+  onHostMessage(msg, link) {
+    if (msg.t === "ask") Engine.handleAsk(link.id, msg.targetId, msg.rank);
+  },
+  onLeave(id) {
+    Engine.removePlayer(id);
+    if (Engine.phase === "lobby") updateHostConnCount();
+  },
+  render: renderState,
+});
 
 $("btn-start").onclick = () => Engine.startGame();
 $("btn-new-game").onclick = () => Engine.startGame();
-
-function copyFrom(id) {
-  const ta = $(id);
-  ta.select();
-  navigator.clipboard.writeText(ta.value).catch(() => {});
-}
-$("btn-copy-offer").onclick = () => copyFrom("guest-offer-code");
-$("btn-copy-reply").onclick = () => copyFrom("host-reply-code");

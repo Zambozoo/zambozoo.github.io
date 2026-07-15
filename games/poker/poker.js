@@ -2,124 +2,9 @@
 // Texas Hold'em over manual-signaling WebRTC.
 // The HOST runs the authoritative engine and deals; GUESTS send actions and
 // render the state the host broadcasts. Host is also a player (id 0).
-
-const $ = (id) => document.getElementById(id);
-const SUITS = ["♠", "♥", "♦", "♣"]; // spade heart diamond club
-const RANK_STR = { 11: "J", 12: "Q", 13: "K", 14: "A" };
-
-function rankLabel(r) { return RANK_STR[r] || String(r); }
-
-function cardEl(card, opts = {}) {
-  const el = document.createElement("div");
-  el.className = "card" + (opts.big ? " big" : "");
-  if (!card) { el.classList.add("back"); return el; }
-  if (card.suit === 1 || card.suit === 2) el.classList.add("red");
-  el.innerHTML = `<span class="r">${rankLabel(card.rank)}</span><span>${SUITS[card.suit]}</span>`;
-  return el;
-}
-
-function makeDeck() {
-  const d = [];
-  for (let s = 0; s < 4; s++) for (let r = 2; r <= 14; r++) d.push({ rank: r, suit: s });
-  for (let i = d.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [d[i], d[j]] = [d[j], d[i]];
-  }
-  return d;
-}
-
-function log(msg, hl) {
-  const el = document.createElement("div");
-  if (hl) el.className = "hl";
-  el.textContent = msg;
-  $("log").prepend(el);
-}
-
-// ============================================================
-// NETWORK LAYER
-// ============================================================
-const Net = {
-  role: null,          // 'host' | 'guest'
-  myName: "",
-  // host:
-  links: [],           // PeerLink per guest
-  nextGuestId: 1,
-  // guest:
-  link: null,
-  myId: null,
-};
-
-// -------- HOST networking --------
-function hostAcceptGuest(guestCode) {
-  const id = Net.nextGuestId++;
-  const link = new RTC.PeerLink({
-    onOpen: () => {}, // player registers via 'join' message
-    onMessage: (msg, lnk) => hostOnMessage(msg, lnk),
-    onClose: (lnk) => hostOnClose(lnk),
-  });
-  link.id = id;
-  Net.links.push(link);
-  return link.initHost(guestCode);
-}
-
-function hostOnMessage(msg, link) {
-  if (msg.t === "join") {
-    Engine.addPlayer(link.id, msg.name);
-    link.send({ t: "welcome", id: link.id });
-    updateHostConnCount();
-    Engine.broadcast();
-  } else if (msg.t === "action") {
-    Engine.handleAction(link.id, msg.action, msg.amount);
-  }
-}
-
-function hostOnClose(link) {
-  Engine.removePlayer(link.id);
-  Engine.broadcast();
-}
-
-function sendToPlayer(pid, obj) {
-  if (pid === 0) return; // host renders locally
-  const link = Net.links.find((l) => l.id === pid);
-  if (link) link.send(obj);
-}
-
-// -------- GUEST networking --------
-async function guestCreateOffer() {
-  Net.link = new RTC.PeerLink({
-    onOpen: () => Net.link.send({ t: "join", name: Net.myName }),
-    onMessage: (msg) => guestOnMessage(msg),
-    onClose: () => { $("table-msg").textContent = "Disconnected from host."; },
-  });
-  return Net.link.initGuest();
-}
-
-function guestOnMessage(msg) {
-  if (msg.t === "welcome") {
-    Net.myId = msg.id;
-    show("lobby");
-    $("lobby-guest-msg").classList.remove("hidden");
-  } else if (msg.t === "state") {
-    renderState(msg.state);
-  } else if (msg.t === "log") {
-    log(msg.msg, msg.hl);
-  }
-}
-
-function guestSendAction(action, amount) {
-  Net.link.send({ t: "action", action, amount });
-}
-
-// Route a local (host player) action or forward a guest action.
-function submitAction(action, amount) {
-  if (Net.role === "host") Engine.handleAction(0, action, amount);
-  else guestSendAction(action, amount);
-}
-
-function broadcastLog(msg, hl) {
-  log(msg, hl);
-  for (const l of Net.links) l.send({ t: "log", msg, hl });
-}
+//
+// Shared plumbing (networking, card rendering, deck, setup/lobby wiring)
+// lives in ../shared/table.js. This file is poker's engine + rendering.
 
 // ============================================================
 // GAME ENGINE (host only)
@@ -174,7 +59,7 @@ const Engine = {
         inHand, lastAction: "", showdown: false,
       };
     }
-    this.hand = { deck, seats, community: [], currentBet: 0, minRaise: this.cfg.bb, turn: null, winners: [] };
+    this.hand = { deck, seats, community: [], discard: [], currentBet: 0, minRaise: this.cfg.bb, turn: null, winners: [] };
     this.phase = "preflop";
 
     const active = this.activeIdxs();
@@ -238,6 +123,7 @@ const Engine = {
 
     if (action === "fold") {
       s.folded = true; s.lastAction = "Fold";
+      this.hand.discard.push(...s.hole); s.hole = []; // muck to the discard pile
     } else if (action === "check") {
       if (toCall > 0) return;
       s.lastAction = "Check";
@@ -306,7 +192,11 @@ const Engine = {
     });
     const runOut = canAct.length <= 1; // rest are all-in: deal remaining board, no betting
 
-    const deal = (n) => { for (let i = 0; i < n; i++) this.hand.community.push(this.hand.deck.pop()); };
+    // burn one to the discard pile, then deal `n` community cards
+    const deal = (n) => {
+      if (this.hand.deck.length) this.hand.discard.push(this.hand.deck.pop());
+      for (let i = 0; i < n; i++) this.hand.community.push(this.hand.deck.pop());
+    };
 
     if (this.phase === "preflop") { deal(3); this.phase = "flop"; }
     else if (this.phase === "flop") { deal(1); this.phase = "turn"; }
@@ -413,6 +303,8 @@ const Engine = {
       phase: this.phase,
       seats,
       community: this.hand ? this.hand.community : [],
+      deck: this.hand ? this.hand.deck.length : 0,
+      discard: this.hand ? this.hand.discard.length : 0,
       pot: this.hand ? this.totalPot() : 0,
       currentBet: this.hand ? this.hand.currentBet : 0,
       minRaise: this.hand ? this.hand.minRaise : this.cfg.bb,
@@ -427,7 +319,6 @@ const Engine = {
       if (id === 0) renderState(this.projectFor(0));
       else sendToPlayer(id, { t: "state", state: this.projectFor(id) });
     }
-    if (!this.order.includes(0)) {} // host always seat 0
   },
 };
 
@@ -447,16 +338,37 @@ function renderState(state) {
     opp.appendChild(seatEl(s, false));
   }
 
-  // me
+  // me (seat card only; my cards render in the hand zone)
   $("me").innerHTML = "";
   if (mySeat) $("me").appendChild(seatEl(mySeat, true));
 
-  // community
-  const comm = $("community");
-  comm.innerHTML = "";
-  for (const c of state.community) comm.appendChild(cardEl(c, { big: true }));
+  // hand zone: my hole cards
+  const hand = $("my-hand");
+  hand.innerHTML = "";
+  if (mySeat && mySeat.hole) for (const c of mySeat.hole) hand.appendChild(cardEl(c, { big: true }));
 
-  $("pot").textContent = state.pot > 0 ? `Pot: ${state.pot}` : "";
+  // poker has no laid-out personal cards; the play area stays empty (hidden)
+  $("my-play").innerHTML = "";
+
+  // shared area: community cards + pot
+  const shared = $("shared");
+  shared.innerHTML = "";
+  if (state.community.length || state.pot > 0) {
+    const cards = document.createElement("div");
+    cards.className = "cards";
+    for (const c of state.community) cards.appendChild(cardEl(c, { big: true }));
+    shared.appendChild(cards);
+    if (state.pot > 0) {
+      const pot = document.createElement("div");
+      pot.className = "pot";
+      pot.textContent = `Pot: ${state.pot}`;
+      shared.appendChild(pot);
+    }
+  }
+
+  // deck + discard piles (face down)
+  renderPile($("deck"), "Deck", state.deck, null);
+  renderPile($("discard"), "Discard", state.discard, null);
 
   // message
   let msg = "";
@@ -489,14 +401,17 @@ function seatEl(s, isMe) {
   el.innerHTML = `
     ${dealer}
     <div class="seat-name">${escapeHtml(s.name)}${isMe ? " (you)" : ""}</div>
-    <div class="seat-chips">${s.chips} chips</div>
-    <div class="seat-bet">${s.bet > 0 ? "bet " + s.bet : ""}</div>
+    <div class="seat-sub">${s.chips} chips</div>
+    <div class="seat-info">${s.bet > 0 ? "bet " + s.bet : ""}</div>
     <div class="seat-action">${s.folded ? "folded" : (s.allIn ? "all-in" : escapeHtml(s.lastAction || ""))}</div>`;
-  const cards = document.createElement("div");
-  cards.className = "cards";
-  if (s.hole) for (const c of s.hole) cards.appendChild(cardEl(c));
-  else for (let i = 0; i < s.cardsCount; i++) cards.appendChild(cardEl(null));
-  el.appendChild(cards);
+  // opponents show their cards in-seat; my cards live in the hand zone
+  if (!isMe) {
+    const cards = document.createElement("div");
+    cards.className = "cards";
+    if (s.hole) for (const c of s.hole) cards.appendChild(cardEl(c));
+    else for (let i = 0; i < s.cardsCount; i++) cards.appendChild(cardEl(null));
+    el.appendChild(cards);
+  }
   return el;
 }
 
@@ -536,22 +451,6 @@ function renderActions(state, mySeat) {
   $("act-allin").textContent = `All-in (${myChips})`;
 }
 
-function escapeHtml(str) {
-  return String(str).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-}
-
-// ============================================================
-// VIEW SWITCHING
-// ============================================================
-function show(which) {
-  for (const s of ["setup", "lobby", "table"]) {
-    if (s === "table") $(s).classList.toggle("hidden", which !== "table");
-    else $(s).classList.toggle("hidden", which !== s);
-  }
-  // lobby + table can share screen with log; setup hidden once playing
-  if (which === "table") $("setup").classList.add("hidden");
-}
-
 function renderLobby() {
   const ul = $("lobby-players");
   ul.innerHTML = "";
@@ -568,68 +467,40 @@ function updateHostConnCount() {
   renderLobby();
 }
 
-// ============================================================
-// EVENT WIRING
-// ============================================================
-function setName() {
-  const n = $("name-input").value.trim();
-  return n || "Player";
+// Route a local (host player) action or forward a guest action.
+function submitAction(action, amount) {
+  if (Net.role === "host") Engine.handleAction(0, action, amount);
+  else Net.link.send({ t: "action", action, amount });
 }
 
-$("btn-host").onclick = () => {
-  Net.role = "host";
-  Net.myName = setName();
-  Engine.addPlayer(0, Net.myName); // host is seat 0
-  $("setup-choose").classList.add("hidden");
-  $("setup-host").classList.remove("hidden");
-  $("lobby").classList.remove("hidden");
-  $("lobby-host-controls").classList.remove("hidden");
-  renderLobby();
-  log("You are hosting. Add players, then Start hand.", true);
-};
-
-$("btn-join").onclick = async () => {
-  Net.role = "guest";
-  Net.myName = setName();
-  $("setup-choose").classList.add("hidden");
-  $("setup-guest").classList.remove("hidden");
-  $("guest-offer-code").value = "Generating…";
-  const code = await guestCreateOffer();
-  $("guest-offer-code").value = code;
-};
-
-$("btn-host-accept").onclick = async () => {
-  const code = $("host-guest-code").value.trim();
-  if (!code) return;
-  try {
-    const reply = await hostAcceptGuest(code);
-    $("host-reply-code").value = reply;
-    $("host-reply-wrap").classList.remove("hidden");
-    $("host-guest-code").value = "";
-  } catch (e) {
-    alert("Couldn't read that join code. Make sure it was copied fully.");
-  }
-};
-
-$("btn-guest-connect").onclick = async () => {
-  const code = $("guest-answer-code").value.trim();
-  if (!code) return;
-  try { await Net.link.acceptRemoteCode(code); }
-  catch (e) { alert("Couldn't read that reply code. Make sure it was copied fully."); }
-};
+// ============================================================
+// FRAMEWORK HOOKS + EVENT WIRING
+// ============================================================
+Table.configure({
+  onHost() {
+    Engine.addPlayer(0, Net.myName); // host is seat 0
+    renderLobby();
+    log("You are hosting. Add players, then Start hand.", true);
+  },
+  onJoin(id, name, link) {
+    Engine.addPlayer(id, name);
+    link.send({ t: "welcome", id });
+    updateHostConnCount();
+    Engine.broadcast();
+  },
+  onHostMessage(msg, link) {
+    if (msg.t === "action") Engine.handleAction(link.id, msg.action, msg.amount);
+  },
+  onLeave(id) {
+    Engine.removePlayer(id);
+    Engine.broadcast();
+  },
+  render: renderState,
+});
 
 $("btn-start").onclick = () => Engine.startHand();
 $("btn-next-hand").onclick = () => Engine.startHand();
 
-function copyFrom(id) {
-  const ta = $(id);
-  ta.select();
-  navigator.clipboard.writeText(ta.value).catch(() => {});
-}
-$("btn-copy-offer").onclick = () => copyFrom("guest-offer-code");
-$("btn-copy-reply").onclick = () => copyFrom("host-reply-code");
-
-// action buttons
 $("act-fold").onclick = () => submitAction("fold");
 $("act-check").onclick = () => submitAction("check");
 $("act-call").onclick = () => submitAction("call");

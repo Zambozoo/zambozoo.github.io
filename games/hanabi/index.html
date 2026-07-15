@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hanabi &mdash; P2P</title>
+  <link rel="stylesheet" href="../shared/table.css" />
+  <link rel="stylesheet" href="./hanabi.css" />
+</head>
+<body>
+  <a class="home-link" href="../../">&larr; Game Room</a>
+  <h1 class="title">Hanabi</h1>
+
+  <!-- ============ SETUP / CONNECTION ============ -->
+  <section id="setup" class="panel">
+    <div id="setup-choose">
+      <p class="lead">A cooperative fireworks game. Together you build five suits from 1 to 5 &mdash; but you can&rsquo;t see your own hand, so you rely on teammates&rsquo; hints. One person hosts (and deals); everyone else joins by trading codes.</p>
+      <div class="row">
+        <input id="name-input" placeholder="Your name" maxlength="16" />
+      </div>
+      <div class="row">
+        <button id="btn-host" class="primary">Host a game</button>
+        <button id="btn-join">Join a game</button>
+      </div>
+    </div>
+
+    <!-- HOST: accept players -->
+    <div id="setup-host" class="hidden">
+      <h3>Host &mdash; add players</h3>
+      <p class="hint">Each friend sends you their <b>join code</b>. Paste it below, generate a reply, and send the reply back to them. Repeat for every player.</p>
+      <textarea id="host-guest-code" placeholder="Paste a player's join code here"></textarea>
+      <button id="btn-host-accept">Generate reply code</button>
+      <div id="host-reply-wrap" class="hidden">
+        <label>Send this reply code back to that player:</label>
+        <textarea id="host-reply-code" readonly></textarea>
+        <button id="btn-copy-reply" class="copy">Copy reply</button>
+      </div>
+      <p class="hint" id="host-connected-count">Connected players: 1 (you)</p>
+    </div>
+
+    <!-- GUEST: create join code, paste reply -->
+    <div id="setup-guest" class="hidden">
+      <h3>Join a game</h3>
+      <p class="hint">Step 1 &mdash; send this join code to the host:</p>
+      <textarea id="guest-offer-code" readonly placeholder="Generating..."></textarea>
+      <button id="btn-copy-offer" class="copy">Copy join code</button>
+      <p class="hint">Step 2 &mdash; paste the host's reply code here:</p>
+      <textarea id="guest-answer-code" placeholder="Paste the host's reply code"></textarea>
+      <button id="btn-guest-connect" class="primary">Connect</button>
+    </div>
+  </section>
+
+  <!-- ============ LOBBY ============ -->
+  <section id="lobby" class="panel hidden">
+    <h3>Lobby</h3>
+    <ul id="lobby-players"></ul>
+    <div id="lobby-host-controls" class="hidden">
+      <div id="config" class="config">
+        <h4>Game options</h4>
+        <label class="opt"><input type="checkbox" id="opt-rainbow" /> <b>Color Avalanche</b> &mdash; adds a Rainbow suit</label>
+        <div id="rainbow-modes" class="opt-sub hidden">
+          <select id="opt-rainbow-mode">
+            <option value="full">6th suit with its own color clue</option>
+            <option value="wild">6th suit, no own clue &mdash; matches any color clue</option>
+            <option value="short">6th suit with only one of each number</option>
+          </select>
+        </div>
+        <label class="opt"><input type="checkbox" id="opt-black" /> <b>Black Powder</b> &mdash; a reversed suit (5&rarr;1), no color clues</label>
+        <label class="opt"><input type="checkbox" id="opt-master" /> <b>Master Artisan</b> &mdash; completing a firework draws a bonus token</label>
+        <label class="opt"><input type="checkbox" id="opt-perfect" /> <b>Perfect Game</b> &mdash; play until perfect or impossible</label>
+        <label class="opt"><input type="checkbox" id="opt-hideclues" /> <b>Memory Mode</b> &mdash; hide clue markers; remember them yourself</label>
+      </div>
+      <button id="btn-start" class="primary">Start game</button>
+    </div>
+    <p id="lobby-guest-msg" class="hint hidden">Waiting for the host to start the game&hellip;</p>
+  </section>
+
+  <!-- ============ TABLE (standardized zones) ============ -->
+  <section id="table" class="hidden">
+    <div id="opponents" class="opponents"></div>
+
+    <div class="felt">
+      <div id="shared" class="zone shared" data-label="Fireworks"></div>
+      <div class="felt-row">
+        <div id="deck" class="zone" data-label="Deck"></div>
+        <div id="discard" class="zone" data-label="Discard"></div>
+      </div>
+      <div id="table-msg" class="table-msg"></div>
+    </div>
+
+    <div class="self">
+      <div id="my-play" class="zone cards"></div>
+      <div id="me" class="me"></div>
+      <div id="my-hand" class="zone cards hand" data-label="Your hand (hidden from you)"></div>
+    </div>
+
+    <div id="controls" class="controls">
+      <p class="control-hint hidden" id="turn-hint"></p>
+      <div id="action-modes" class="action-buttons hidden">
+        <button id="mode-play" class="primary">Play</button>
+        <button id="mode-discard">Discard</button>
+        <button id="mode-hint">Hint</button>
+      </div>
+      <div id="hint-picker" class="hint-picker hidden"></div>
+      <div id="bonus-picker" class="hint-picker hidden"></div>
+      <div id="host-controls" class="host-controls hidden">
+        <button id="btn-new-game" class="primary">New game</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel log-panel">
+    <h3>Log</h3>
+    <div id="log" class="log"></div>
+  </section>
+
+  <script src="../shared/rtc.js"></script>
+  <script src="../shared/table.js"></script>
+  <script src="./hanabi.js"></script>
+</body>
+</html>

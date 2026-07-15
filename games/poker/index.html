@@ -4,10 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Texas Hold'em &mdash; P2P</title>
+  <link rel="stylesheet" href="../shared/table.css" />
   <link rel="stylesheet" href="./poker.css" />
 </head>
 <body>
-  <a class="home-link" href="../">&larr; Game Room</a>
+  <a class="home-link" href="../../">&larr; Game Room</a>
   <h1 class="title">Texas Hold'em</h1>
 
   <!-- ============ SETUP / CONNECTION ============ -->
@@ -62,35 +63,44 @@
     <p id="lobby-guest-msg" class="hint hidden">Waiting for the host to start the hand&hellip;</p>
   </section>
 
-  <!-- ============ TABLE ============ -->
+  <!-- ============ TABLE (standardized zones) ============ -->
   <section id="table" class="hidden">
     <div id="opponents" class="opponents"></div>
 
-    <div class="board">
-      <div id="community" class="community"></div>
-      <div id="pot" class="pot"></div>
+    <div class="felt">
+      <div id="shared" class="zone shared" data-label="Community"></div>
+      <div class="felt-row">
+        <div id="deck" class="zone" data-label="Deck"></div>
+        <div id="discard" class="zone" data-label="Discard"></div>
+      </div>
       <div id="table-msg" class="table-msg"></div>
     </div>
 
-    <div id="me" class="me"></div>
-
-    <div id="actions" class="actions hidden">
-      <div class="bet-controls hidden" id="bet-controls">
-        <input type="range" id="bet-slider" />
-        <input type="number" id="bet-amount" />
-      </div>
-      <div class="action-buttons">
-        <button id="act-fold" class="danger">Fold</button>
-        <button id="act-check">Check</button>
-        <button id="act-call">Call</button>
-        <button id="act-bet" class="primary">Bet</button>
-        <button id="act-raise" class="primary">Raise</button>
-        <button id="act-allin" class="warn">All-in</button>
-      </div>
+    <div class="self">
+      <div id="my-play" class="zone cards" data-label="Revealed"></div>
+      <div id="me" class="me"></div>
+      <div id="my-hand" class="zone cards hand" data-label="Your cards"></div>
     </div>
 
-    <div id="host-controls" class="host-controls hidden">
-      <button id="btn-next-hand" class="primary">Next hand</button>
+    <div id="controls" class="controls">
+      <div id="actions" class="hidden">
+        <div class="bet-controls hidden" id="bet-controls">
+          <input type="range" id="bet-slider" />
+          <input type="number" id="bet-amount" />
+        </div>
+        <div class="action-buttons">
+          <button id="act-fold" class="danger">Fold</button>
+          <button id="act-check">Check</button>
+          <button id="act-call">Call</button>
+          <button id="act-bet" class="primary">Bet</button>
+          <button id="act-raise" class="primary">Raise</button>
+          <button id="act-allin" class="warn">All-in</button>
+        </div>
+      </div>
+
+      <div id="host-controls" class="host-controls hidden">
+        <button id="btn-next-hand" class="primary">Next hand</button>
+      </div>
     </div>
   </section>
 
@@ -99,7 +109,8 @@
     <div id="log" class="log"></div>
   </section>
 
-  <script src="./rtc.js"></script>
+  <script src="../shared/rtc.js"></script>
+  <script src="../shared/table.js"></script>
   <script src="./handeval.js"></script>
   <script src="./poker.js"></script>
 </body>

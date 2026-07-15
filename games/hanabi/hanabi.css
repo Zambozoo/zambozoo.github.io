@@ -1,0 +1,99 @@
+/* Hanabi theme — fireworks against a night sky. Layout/components live in shared/table.css. */
+:root {
+  --panel: #1a1530;
+  --border: #382f5c;
+  --text: #f4f0fb;
+  --muted: #a99fc4;
+  --accent: #fbbf24;
+  --gold: #fbbf24;
+  --felt: #241d44;
+  --felt-edge: #120c26;
+  --input-bg: #120d24;
+  --btn-bg: #2e2650;
+  --btn-primary: #7c3aed;
+  --btn-primary-border: #9c6bff;
+  --page-bg: radial-gradient(circle at 50% -10%, #2a1f4a 0%, #0b0716 70%);
+  --back-a: #4c3a86;
+  --back-b: #3a2c68;
+  --back-border: #6d5aa8;
+}
+
+/* ===== Hanabi card colors (5 suits) ===== */
+.card.hr { background: #ef4444; color: #fff; }
+.card.hy { background: #eab308; color: #2a2100; }
+.card.hg { background: #22c55e; color: #052e13; }
+.card.hb { background: #3b82f6; color: #fff; }
+.card.hw { background: #eef2f7; color: #1a1a1a; border: 1px solid #b8c2d0; }
+.card.hm { background: linear-gradient(135deg, #ef4444 0%, #eab308 30%, #22c55e 55%, #3b82f6 78%, #a855f7 100%); color: #fff; }
+.card.hk { background: #1c2130; color: #e8edf5; border: 1px solid #4b5563; }
+.card .cl { font-size: 0.62rem; opacity: 0.8; margin-top: 1px; }
+
+/* Mini cards (discard pile) */
+.card.mini { width: 24px; height: 32px; font-size: 0.62rem; border-radius: 4px; }
+.card.mini .r { font-size: 0.8rem; }
+.card.mini .cl { display: none; }
+
+/* Empty firework slot */
+.card.placeholder {
+  background: transparent !important; box-shadow: none;
+  border: 2px dashed rgba(255,255,255,0.22); color: var(--muted);
+}
+
+/* Selected opponent card while choosing a hint */
+.card.selected { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+/* Drag-to-reorder your own hand */
+.hand .card { cursor: grab; }
+.hand .card.dragging { opacity: 0.45; cursor: grabbing; }
+.hand .card.dragover { outline: 2px dashed var(--accent); outline-offset: 2px; }
+
+/* Known-hint badge on opponent cards */
+.card { position: relative; }
+.known-badge {
+  position: absolute; top: -6px; right: -6px;
+  background: var(--accent); color: #201400; font-size: 0.6rem; font-weight: 700;
+  border-radius: 999px; padding: 0 4px; line-height: 1.4;
+}
+/* Own cards where only the rank is known keep the back look but show the digit */
+.card.back.known .r { color: #fff; }
+
+/* ===== Shared area: fireworks + status ===== */
+.fireworks { gap: 8px; }
+.status {
+  display: flex; flex-wrap: wrap; gap: 0.35rem 1.25rem; justify-content: center; align-items: center;
+  margin-top: 0.85rem; font-size: 0.95rem; color: var(--text);
+}
+.status .stat { display: inline-flex; align-items: center; gap: 0.4rem; }
+.status b { color: var(--accent); }
+.dots { display: inline-flex; gap: 3px; }
+.dot { width: 11px; height: 11px; border-radius: 50%; }
+.dot.hint { background: #3b82f6; }
+.dot.fuse { background: #ef4444; }
+.dot.off { background: #3a3550; }
+
+.discard-cards { max-width: 260px; }
+
+/* ===== Controls ===== */
+.action-buttons button.active { outline: 2px solid var(--accent); outline-offset: 1px; }
+.hint-picker { margin-top: 0.75rem; display: flex; flex-direction: column; gap: 0.5rem; align-items: center; }
+.hint-row { display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: center; }
+.hint-btn { min-width: 64px; font-weight: 600; }
+.hint-btn.hr { background: #ef4444; color: #fff; border-color: #f87171; }
+.hint-btn.hy { background: #eab308; color: #2a2100; border-color: #facc15; }
+.hint-btn.hg { background: #22c55e; color: #052e13; border-color: #4ade80; }
+.hint-btn.hb { background: #3b82f6; color: #fff; border-color: #60a5fa; }
+.hint-btn.hw { background: #eef2f7; color: #1a1a1a; border-color: #cbd5e1; }
+.hint-btn.hm { background: linear-gradient(135deg, #ef4444, #eab308, #22c55e, #3b82f6, #a855f7); color: #fff; border-color: #c084fc; }
+.hint-btn .card.mini { pointer-events: none; }
+
+/* ===== Lobby config panel ===== */
+.config {
+  text-align: left; margin: 0 auto 1rem; max-width: 460px;
+  background: var(--input-bg); border: 1px solid var(--border); border-radius: 12px; padding: 1rem 1.1rem;
+}
+.config h4 { margin: 0 0 0.6rem; color: var(--accent); font-size: 0.95rem; }
+.config .opt { display: flex; align-items: flex-start; gap: 0.5rem; margin: 0.45rem 0; font-size: 0.9rem; color: var(--text); cursor: pointer; }
+.config .opt input { margin-top: 0.15rem; }
+.config .opt.disabled { opacity: 0.45; cursor: default; }
+.config .opt-sub { margin: 0.15rem 0 0.55rem 1.6rem; }
+.config select { background: var(--btn-bg); color: var(--text); border: 1px solid var(--border); border-radius: 8px; padding: 0.35rem 0.5rem; font-size: 0.85rem; }
