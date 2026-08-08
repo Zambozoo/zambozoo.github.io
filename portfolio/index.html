@@ -61,12 +61,18 @@
     header h1 { font-size: clamp(2rem, 6vw, 3.25rem); letter-spacing: -0.02em; }
     header h1 .accent { color: var(--accent); }
     header p { color: var(--muted); margin-top: 0.75rem; font-size: 1.05rem; }
-    .empty {
-      max-width: 640px; margin: 0 auto; text-align: center;
-      background: var(--panel); border: 1px dashed var(--border); border-radius: 16px;
-      padding: 3rem 1.5rem; color: var(--muted);
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1.25rem; max-width: 960px; margin: 0 auto; }
+    .card {
+      display: flex; flex-direction: column;
+      background: var(--panel); border: 1px solid var(--border); border-radius: 16px;
+      padding: 1.5rem; text-decoration: none; color: inherit;
+      transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease; min-height: 160px;
     }
-    .empty .icon { font-size: 3rem; margin-bottom: 1rem; }
+    .card:hover { transform: translateY(-4px); background: var(--panel-hover); border-color: var(--accent); }
+    .card .icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+    .card h2 { font-size: 1.35rem; margin-bottom: 0.35rem; }
+    .card p { color: var(--muted); font-size: 0.95rem; flex: 1; }
+    .card .tag { align-self: flex-start; margin-top: 1rem; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--accent); border: 1px solid var(--accent); border-radius: 999px; padding: 0.2rem 0.6rem; }
     footer { text-align: center; color: var(--muted); font-size: 0.85rem; margin-top: 3rem; }
   </style>
 </head>
@@ -96,10 +102,14 @@
       <p>Selected projects and things I&rsquo;ve built.</p>
     </header>
 
-    <div class="empty">
-      <div class="icon">&#128188;</div>
-      <p>Projects are on the way. Check back soon.</p>
-    </div>
+    <main class="grid">
+      <a class="card" href="./pokemon_tree/pokemon_tree.html">
+        <div class="icon">&#127795;</div>
+        <h2>Pok&eacute;mon Tree</h2>
+        <p>A phylogenetic tree of every Pok&eacute;mon, built by applying Normalized Compression Distance and the Fitch&ndash;Margoliash method to Pok&eacute;API data.</p>
+        <span class="tag">Explore</span>
+      </a>
+    </main>
 
     <footer>
       Hosted on GitHub Pages.
