@@ -182,3 +182,16 @@ button.copy { background: #2a3b57; font-size: 0.85rem; padding: 0.4rem 0.8rem; }
 .log { max-height: 180px; overflow-y: auto; font-size: 0.85rem; color: var(--muted); }
 .log div { padding: 0.15rem 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
 .log .hl { color: var(--accent); }
+
+.rtc-diag {
+  margin-top: 0.9rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--line, #333);
+  border-radius: 6px;
+  color: var(--muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-x: auto;
+}

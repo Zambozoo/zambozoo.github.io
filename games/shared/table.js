@@ -123,6 +123,44 @@ const Table = {
   },
 };
 
+// -------- CONNECTION DIAGNOSTICS --------
+// Reports which ICE candidates each side actually put in its pasted code.
+// A remote peer can only be reached via srflx or relay candidates; host
+// candidates (and mDNS-masked ones) work on localhost/LAN only.
+function countsToText(c) {
+  if (!c) return "—";
+  const parts = [`host ${c.host}`, `srflx ${c.srflx}`, `relay ${c.relay}`];
+  if (c.mdns) parts.push(`mdns ${c.mdns}`);
+  return parts.join("  ");
+}
+
+function renderDiag() {
+  const panel = Net.role === "host" ? $("setup-host") : $("setup-guest");
+  if (!panel) return;
+  let box = $("rtc-diag");
+  if (!box) {
+    box = document.createElement("pre");
+    box.id = "rtc-diag";
+    box.className = "rtc-diag";
+    panel.appendChild(box);
+  }
+  const links = Net.role === "host" ? Net.links : (Net.link ? [Net.link] : []);
+  const lines = ["connection diagnostics"];
+  links.forEach((l, i) => {
+    const d = l.diag;
+    lines.push(
+      `${links.length > 1 ? `[player ${i + 1}] ` : ""}${d.state}` +
+      (d.gatherMs !== null ? `  gathered in ${d.gatherMs}ms${d.timedOut ? " (TIMED OUT — code is incomplete)" : ""}` : ""),
+    );
+    lines.push(`  sent:     ${countsToText(d.local)}`);
+    lines.push(`  received: ${countsToText(d.remote)}`);
+    if (d.pair) lines.push(`  using:    ${d.pair.local} <-> ${d.pair.remote} (${d.pair.protocol})`);
+    const c = d.local;
+    if (c && !c.srflx && !c.relay) lines.push("  ! no public candidates — this code only works on localhost/LAN");
+  });
+  box.textContent = lines.join("\n");
+}
+
 // -------- HOST networking --------
 function hostAcceptGuest(guestCode) {
   const id = Net.nextGuestId++;
@@ -130,6 +168,7 @@ function hostAcceptGuest(guestCode) {
     onOpen: () => {},
     onMessage: (msg, lnk) => hostOnMessage(msg, lnk),
     onClose: (lnk) => hostOnClose(lnk),
+    onDiag: renderDiag,
   });
   link.id = id;
   Net.links.push(link);
@@ -166,6 +205,7 @@ async function guestCreateOffer() {
     onOpen: () => Net.link.send({ t: "join", name: Net.myName }),
     onMessage: (msg) => guestOnMessage(msg),
     onClose: () => { const m = $("table-msg"); if (m) m.textContent = "Disconnected from host."; },
+    onDiag: renderDiag,
   });
   return Net.link.initGuest();
 }
