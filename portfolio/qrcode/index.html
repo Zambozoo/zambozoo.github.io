@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QR Code Generator &mdash; zambozoo</title>
+  <style>
+    :root {
+      --bg: #0f1420;
+      --panel: #1a2233;
+      --panel-hover: #232f47;
+      --accent: #4ade80;
+      --text: #e8edf5;
+      --muted: #8a96ad;
+      --border: #2c3852;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: radial-gradient(circle at 50% 0%, #17203a 0%, var(--bg) 60%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+    .topbar {
+      position: sticky; top: 0; z-index: 30;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.9rem 1.25rem;
+      background: rgba(15, 20, 32, 0.85);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+    }
+    .brand { font-weight: 700; font-size: 1.15rem; letter-spacing: -0.01em; color: var(--text); text-decoration: none; }
+    .brand .accent { color: var(--accent); }
+    .nav-toggle {
+      display: inline-flex; flex-direction: column; justify-content: center; gap: 5px;
+      width: 44px; height: 44px; padding: 0 10px;
+      background: transparent; border: 1px solid var(--border); border-radius: 10px; cursor: pointer;
+    }
+    .nav-toggle span { display: block; height: 2px; width: 100%; background: var(--text); border-radius: 2px; transition: transform 0.25s ease, opacity 0.25s ease; }
+    body.nav-open .nav-toggle span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    body.nav-open .nav-toggle span:nth-child(2) { opacity: 0; }
+    body.nav-open .nav-toggle span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+    .nav-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); opacity: 0; visibility: hidden; transition: opacity 0.25s ease, visibility 0.25s ease; z-index: 40; }
+    body.nav-open .nav-overlay { opacity: 1; visibility: visible; }
+    .nav-panel {
+      position: fixed; top: 0; right: 0; height: 100%; width: min(300px, 80vw);
+      background: var(--panel); border-left: 1px solid var(--border);
+      transform: translateX(100%); transition: transform 0.28s ease; z-index: 50;
+      display: flex; flex-direction: column; padding: 1.25rem;
+    }
+    body.nav-open .nav-panel { transform: translateX(0); }
+    .nav-panel .nav-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+    .nav-panel .nav-head span { color: var(--muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; }
+    .nav-close { background: transparent; border: none; color: var(--muted); font-size: 1.6rem; line-height: 1; cursor: pointer; }
+    .nav-panel a { display: flex; align-items: center; gap: 0.75rem; padding: 0.85rem 0.75rem; border-radius: 12px; color: var(--text); text-decoration: none; font-size: 1.05rem; transition: background 0.15s ease; }
+    .nav-panel a:hover { background: var(--panel-hover); }
+    .nav-panel a .ico { font-size: 1.3rem; }
+
+    .wrap { padding: 2rem 1rem 4rem; max-width: 720px; margin: 0 auto; }
+    header { text-align: center; margin: 1.5rem auto 2rem; }
+    header h1 { font-size: clamp(1.75rem, 5vw, 2.5rem); letter-spacing: -0.02em; }
+    header h1 .accent { color: var(--accent); }
+    header p { color: var(--muted); margin-top: 0.5rem; font-size: 1rem; }
+
+    .qr-stage {
+      display: flex; align-items: center; justify-content: center;
+      width: 320px; height: 320px; margin: 0 auto 2rem;
+      background: #ffffff; border-radius: 16px; border: 1px solid var(--border);
+      padding: 10px;
+    }
+    .qr-stage canvas { display: block; width: 300px; height: 300px; }
+    .qr-stage.empty::after {
+      content: ""; display: block; width: 300px; height: 300px;
+      background: repeating-linear-gradient(45deg, #e9edf3 0 10px, #f6f8fb 10px 20px);
+      border-radius: 6px;
+    }
+    .qr-stage.empty canvas { display: none; }
+
+    .controls {
+      display: flex; flex-direction: column; gap: 1rem;
+      background: var(--panel); border: 1px solid var(--border); border-radius: 16px;
+      padding: 1.25rem;
+    }
+    .row { display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap; }
+    .row > label { color: var(--muted); font-size: 0.85rem; min-width: 120px; }
+    .text-input, .select-input, .file-input {
+      flex: 1 1 180px; min-width: 0;
+      padding: 0.65rem 0.8rem; border-radius: 10px;
+      background: #0f1522; color: var(--text);
+      border: 1px solid var(--border); font: inherit; outline: none;
+    }
+    .text-input:focus, .select-input:focus { border-color: var(--accent); }
+    .btn {
+      padding: 0.65rem 1.2rem; border-radius: 10px; border: 1px solid var(--accent);
+      background: var(--accent); color: #0b1120; font-weight: 600; cursor: pointer;
+      transition: transform 0.1s ease, filter 0.15s ease;
+    }
+    .btn:hover { filter: brightness(1.08); }
+    .btn:active { transform: translateY(1px); }
+    .btn-ghost {
+      background: transparent; color: var(--muted); border: 1px solid var(--border);
+    }
+    .btn-ghost:hover { color: var(--text); border-color: var(--accent); }
+    .hint { color: var(--muted); font-size: 0.8rem; }
+    .error-msg { color: #ff8787; font-size: 0.85rem; min-height: 1.1em; }
+
+    footer { text-align: center; color: var(--muted); font-size: 0.85rem; margin-top: 3rem; }
+  </style>
+</head>
+<body>
+  <nav class="topbar">
+    <a class="brand" href="../../"><span class="accent">zambo</span>zoo</a>
+    <button class="nav-toggle" id="navToggle" aria-label="Menu" aria-controls="navPanel" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+
+  <div class="nav-overlay" id="navOverlay"></div>
+  <aside class="nav-panel" id="navPanel">
+    <div class="nav-head">
+      <span>Navigate</span>
+      <button class="nav-close" id="navClose" aria-label="Close menu">&times;</button>
+    </div>
+    <a href="../../"><span class="ico">&#127968;</span> Home</a>
+    <a href="../../games/"><span class="ico">&#127918;</span> Games</a>
+    <a href="../../docs/"><span class="ico">&#128196;</span> Docs</a>
+    <a href="../"><span class="ico">&#128188;</span> Portfolio</a>
+  </aside>
+
+  <div class="wrap">
+    <header>
+      <h1><span class="accent">QR Code</span> Generator</h1>
+      <p>Type a URL or any text, optionally drop a logo in the middle.</p>
+    </header>
+
+    <div class="qr-stage empty" id="qrStage">
+      <canvas id="qrCanvas" width="300" height="300"></canvas>
+    </div>
+
+    <div class="controls">
+      <div class="row">
+        <input id="textInput" type="text" class="text-input" placeholder="Enter text or URL&hellip;" autocomplete="off" />
+        <button id="generateBtn" class="btn">Generate</button>
+      </div>
+
+      <div class="row">
+        <label for="eccSelect">Error correction</label>
+        <select id="eccSelect" class="select-input">
+          <option value="L">L &mdash; Low (~7%)</option>
+          <option value="M" selected>M &mdash; Medium (~15%)</option>
+          <option value="Q">Q &mdash; Quartile (~25%)</option>
+          <option value="H">H &mdash; High (~30%)</option>
+        </select>
+      </div>
+
+      <div class="row">
+        <label for="logoInput">Center image</label>
+        <input id="logoInput" type="file" class="file-input" accept="image/*" />
+        <button id="clearLogoBtn" class="btn btn-ghost" type="button">Clear</button>
+      </div>
+
+      <div class="hint">Tip: use High correction when embedding a logo so the code still scans.</div>
+      <div class="error-msg" id="errorMsg"></div>
+    </div>
+
+    <footer>Hosted on GitHub Pages.</footer>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
+  <script>
+    (function () {
+      var body = document.body;
+      var toggle = document.getElementById('navToggle');
+      var closeBtn = document.getElementById('navClose');
+      var overlay = document.getElementById('navOverlay');
+      function openNav() { body.classList.add('nav-open'); toggle.setAttribute('aria-expanded', 'true'); }
+      function closeNav() { body.classList.remove('nav-open'); toggle.setAttribute('aria-expanded', 'false'); }
+      toggle.addEventListener('click', function () { body.classList.contains('nav-open') ? closeNav() : openNav(); });
+      closeBtn.addEventListener('click', closeNav);
+      overlay.addEventListener('click', closeNav);
+      document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeNav(); });
+    })();
+
+    (function () {
+      var textInput = document.getElementById('textInput');
+      var generateBtn = document.getElementById('generateBtn');
+      var eccSelect = document.getElementById('eccSelect');
+      var logoInput = document.getElementById('logoInput');
+      var clearLogoBtn = document.getElementById('clearLogoBtn');
+      var canvas = document.getElementById('qrCanvas');
+      var stage = document.getElementById('qrStage');
+      var errorMsg = document.getElementById('errorMsg');
+
+      var logoImage = null;
+
+      function showError(msg) { errorMsg.textContent = msg || ''; }
+
+      function drawLogo() {
+        if (!logoImage) return;
+        var ctx = canvas.getContext('2d');
+        var size = canvas.width;
+        var logoSize = Math.round(size * 0.22);
+        var pad = Math.round(logoSize * 0.12);
+        var box = logoSize + pad * 2;
+        var x = Math.round((size - box) / 2);
+        var y = Math.round((size - box) / 2);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(x, y, box, box);
+        ctx.drawImage(logoImage, x + pad, y + pad, logoSize, logoSize);
+      }
+
+      function generate() {
+        var text = textInput.value.trim();
+        if (!text) {
+          showError('Enter some text first.');
+          return;
+        }
+        showError('');
+        try {
+          new QRious({
+            element: canvas,
+            value: text,
+            size: 300,
+            level: eccSelect.value,
+            background: '#ffffff',
+            foreground: '#0b1120',
+            padding: 8
+          });
+        } catch (err) {
+          showError('Could not generate: ' + err.message);
+          return;
+        }
+        stage.classList.remove('empty');
+        drawLogo();
+      }
+
+      generateBtn.addEventListener('click', generate);
+      textInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') generate(); });
+      eccSelect.addEventListener('change', function () { if (!stage.classList.contains('empty')) generate(); });
+
+      logoInput.addEventListener('change', function () {
+        var file = logoInput.files && logoInput.files[0];
+        if (!file) return;
+        var reader = new FileReader();
+        reader.onload = function (ev) {
+          var img = new Image();
+          img.onload = function () {
+            logoImage = img;
+            if (!stage.classList.contains('empty')) drawLogo();
+          };
+          img.onerror = function () { showError('Could not read that image.'); };
+          img.src = ev.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+
+      clearLogoBtn.addEventListener('click', function () {
+        logoImage = null;
+        logoInput.value = '';
+        if (!stage.classList.contains('empty')) generate();
+      });
+    })();
+  </script>
+</body>
+</html>

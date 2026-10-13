@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Top Anime Openings &mdash; zambozoo</title>
+  <style>
+    :root {
+      --bg: #0f1420;
+      --panel: #1a2233;
+      --panel-hover: #232f47;
+      --accent: #4ade80;
+      --text: #e8edf5;
+      --muted: #8a96ad;
+      --border: #2c3852;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: radial-gradient(circle at 50% 0%, #17203a 0%, var(--bg) 60%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+    .topbar {
+      position: sticky; top: 0; z-index: 30;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.9rem 1.25rem;
+      background: rgba(15, 20, 32, 0.85);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+    }
+    .brand { font-weight: 700; font-size: 1.15rem; letter-spacing: -0.01em; color: var(--text); text-decoration: none; }
+    .brand .accent { color: var(--accent); }
+    .nav-toggle {
+      display: inline-flex; flex-direction: column; justify-content: center; gap: 5px;
+      width: 44px; height: 44px; padding: 0 10px;
+      background: transparent; border: 1px solid var(--border); border-radius: 10px; cursor: pointer;
+    }
+    .nav-toggle span { display: block; height: 2px; width: 100%; background: var(--text); border-radius: 2px; transition: transform 0.25s ease, opacity 0.25s ease; }
+    body.nav-open .nav-toggle span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    body.nav-open .nav-toggle span:nth-child(2) { opacity: 0; }
+    body.nav-open .nav-toggle span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+    .nav-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); opacity: 0; visibility: hidden; transition: opacity 0.25s ease, visibility 0.25s ease; z-index: 40; }
+    body.nav-open .nav-overlay { opacity: 1; visibility: visible; }
+    .nav-panel {
+      position: fixed; top: 0; right: 0; height: 100%; width: min(300px, 80vw);
+      background: var(--panel); border-left: 1px solid var(--border);
+      transform: translateX(100%); transition: transform 0.28s ease; z-index: 50;
+      display: flex; flex-direction: column; padding: 1.25rem;
+    }
+    body.nav-open .nav-panel { transform: translateX(0); }
+    .nav-panel .nav-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+    .nav-panel .nav-head span { color: var(--muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; }
+    .nav-close { background: transparent; border: none; color: var(--muted); font-size: 1.6rem; line-height: 1; cursor: pointer; }
+    .nav-panel a { display: flex; align-items: center; gap: 0.75rem; padding: 0.85rem 0.75rem; border-radius: 12px; color: var(--text); text-decoration: none; font-size: 1.05rem; transition: background 0.15s ease; }
+    .nav-panel a:hover { background: var(--panel-hover); }
+    .nav-panel a .ico { font-size: 1.3rem; }
+
+    .wrap { padding: 2rem 1rem 4rem; max-width: 1100px; margin: 0 auto; }
+    header { text-align: center; margin: 1.5rem auto 2rem; }
+    header h1 { font-size: clamp(1.75rem, 5vw, 2.5rem); letter-spacing: -0.02em; }
+    header h1 .accent { color: var(--accent); }
+    header p { color: var(--muted); margin-top: 0.5rem; font-size: 1rem; }
+
+    .controls {
+      display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap;
+      background: var(--panel); border: 1px solid var(--border); border-radius: 16px;
+      padding: 1rem 1.25rem; margin-bottom: 1.5rem;
+    }
+    .controls label { color: var(--muted); font-size: 0.9rem; }
+    .controls input[type="number"], .controls select {
+      padding: 0.55rem 0.7rem; border-radius: 10px;
+      background: #0f1522; color: var(--text);
+      border: 1px solid var(--border); font: inherit; outline: none; min-width: 120px;
+    }
+    .controls input[type="number"]:focus, .controls select:focus { border-color: var(--accent); }
+    .btn {
+      padding: 0.55rem 1.1rem; border-radius: 10px; border: 1px solid var(--accent);
+      background: var(--accent); color: #0b1120; font-weight: 600; cursor: pointer;
+      transition: filter 0.15s ease, transform 0.1s ease;
+    }
+    .btn:hover:not([disabled]) { filter: brightness(1.08); }
+    .btn:active:not([disabled]) { transform: translateY(1px); }
+    .btn[disabled] { opacity: 0.5; cursor: not-allowed; }
+    .status { color: var(--muted); font-size: 0.9rem; margin-left: auto; }
+    .status.err { color: #ff8787; }
+
+    .table-wrap {
+      background: var(--panel); border: 1px solid var(--border); border-radius: 16px;
+      overflow: hidden;
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+    thead th {
+      background: #141c2d; color: var(--muted); font-weight: 600;
+      text-align: left; padding: 0.8rem 0.9rem; font-size: 0.78rem;
+      text-transform: uppercase; letter-spacing: 0.05em;
+      border-bottom: 1px solid var(--border);
+      position: sticky; top: 0;
+    }
+    tbody td { padding: 0.75rem 0.9rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover { background: rgba(74, 222, 128, 0.04); }
+    .rank { color: var(--muted); font-variant-numeric: tabular-nums; width: 2.5rem; }
+    .cover { width: 48px; }
+    .cover img { width: 48px; height: 68px; object-fit: cover; border-radius: 6px; display: block; }
+    .title a { color: var(--text); text-decoration: none; font-weight: 600; }
+    .title a:hover { color: var(--accent); }
+    .title .meta { color: var(--muted); font-size: 0.8rem; margin-top: 0.15rem; }
+    .score { color: var(--accent); font-weight: 600; font-variant-numeric: tabular-nums; }
+    .themes ul { list-style: none; margin: 0; padding: 0; }
+    .themes li { padding: 0.1rem 0; color: var(--text); font-size: 0.88rem; }
+    .themes li + li { border-top: 1px dashed rgba(140, 150, 173, 0.15); margin-top: 0.1rem; padding-top: 0.2rem; }
+    .themes a.song { color: var(--text); text-decoration: none; font-weight: 500; }
+    .themes a.song:hover { color: var(--accent); text-decoration: underline; }
+    .themes .artist { color: var(--muted); }
+    .themes .eps { color: var(--muted); font-size: 0.8rem; }
+    .themes a.stream {
+      display: inline-flex; align-items: center; justify-content: center;
+      color: var(--accent); text-decoration: none; margin: 0 0.1rem;
+      opacity: 0.7; vertical-align: -2px;
+    }
+    .themes a.stream:hover { opacity: 1; }
+    .themes a.stream svg { width: 14px; height: 14px; }
+    .themes .none { color: var(--muted); font-style: italic; font-size: 0.85rem; }
+
+    .empty { text-align: center; padding: 3rem 1rem; color: var(--muted); }
+    .spinner {
+      display: inline-block; width: 14px; height: 14px; border-radius: 50%;
+      border: 2px solid var(--border); border-top-color: var(--accent);
+      animation: spin 0.8s linear infinite; vertical-align: -2px; margin-right: 0.4rem;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    footer { text-align: center; color: var(--muted); font-size: 0.85rem; margin-top: 3rem; }
+
+    @media (max-width: 640px) {
+      .cover, thead th.cover-h { display: none; }
+      table { font-size: 0.85rem; }
+      tbody td { padding: 0.6rem 0.55rem; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="topbar">
+    <a class="brand" href="../../"><span class="accent">zambo</span>zoo</a>
+    <button class="nav-toggle" id="navToggle" aria-label="Menu" aria-controls="navPanel" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+
+  <div class="nav-overlay" id="navOverlay"></div>
+  <aside class="nav-panel" id="navPanel">
+    <div class="nav-head">
+      <span>Navigate</span>
+      <button class="nav-close" id="navClose" aria-label="Close menu">&times;</button>
+    </div>
+    <a href="../../"><span class="ico">&#127968;</span> Home</a>
+    <a href="../../games/"><span class="ico">&#127918;</span> Games</a>
+    <a href="../../docs/"><span class="ico">&#128196;</span> Docs</a>
+    <a href="../"><span class="ico">&#128188;</span> Portfolio</a>
+  </aside>
+
+  <div class="wrap">
+    <header>
+      <h1><span class="accent">Top Anime</span> Openings &amp; Endings</h1>
+      <p>Enter a year. Pulls the top 100 scored anime that aired that year from AniList, joined with OP/ED themes from AnimeThemes.moe.</p>
+    </header>
+
+    <div class="controls">
+      <label for="yearInput">Year</label>
+      <input id="yearInput" type="number" min="1960" max="2100" step="1" />
+      <label for="typeSelect">Type</label>
+      <select id="typeSelect">
+        <option value="tv" selected>TV</option>
+        <option value="">Any</option>
+        <option value="movie">Movie</option>
+        <option value="ova">OVA</option>
+        <option value="ona">ONA</option>
+        <option value="special">Special</option>
+      </select>
+      <button id="goBtn" class="btn" type="button">Generate</button>
+      <span id="status" class="status"></span>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th class="rank">#</th>
+            <th class="cover-h">Cover</th>
+            <th>Title</th>
+            <th>Score</th>
+            <th>Openings</th>
+            <th>Endings</th>
+          </tr>
+        </thead>
+        <tbody id="rows">
+          <tr><td colspan="6" class="empty">Pick a year and click Generate.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <footer>Rankings from <a style="color:var(--muted);" href="https://anilist.co/" target="_blank" rel="noopener">AniList</a>, themes from <a style="color:var(--muted);" href="https://animethemes.moe/" target="_blank" rel="noopener">AnimeThemes.moe</a>.</footer>
+  </div>
+
+  <script>
+    (function () {
+      var body = document.body;
+      var toggle = document.getElementById('navToggle');
+      var closeBtn = document.getElementById('navClose');
+      var overlay = document.getElementById('navOverlay');
+      function openNav() { body.classList.add('nav-open'); toggle.setAttribute('aria-expanded', 'true'); }
+      function closeNav() { body.classList.remove('nav-open'); toggle.setAttribute('aria-expanded', 'false'); }
+      toggle.addEventListener('click', function () { body.classList.contains('nav-open') ? closeNav() : openNav(); });
+      closeBtn.addEventListener('click', closeNav);
+      overlay.addEventListener('click', closeNav);
+      document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeNav(); });
+    })();
+
+    (function () {
+      var ANILIST = 'https://graphql.anilist.co';
+      var THEMES = 'https://api.animethemes.moe';
+      var TOTAL = 100;
+      var ANILIST_PAGE = 50;
+      var THEMES_PAGE = 100;
+      var FORMAT_MAP = { tv: 'TV', movie: 'MOVIE', ova: 'OVA', ona: 'ONA', special: 'SPECIAL' };
+      var yearInput = document.getElementById('yearInput');
+      var typeSelect = document.getElementById('typeSelect');
+      var goBtn = document.getElementById('goBtn');
+      var statusEl = document.getElementById('status');
+      var rowsEl = document.getElementById('rows');
+
+      yearInput.value = new Date().getFullYear() - 1;
+
+      var runToken = 0;
+
+      function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+
+      function setStatus(text, isError) {
+        statusEl.className = 'status' + (isError ? ' err' : '');
+        statusEl.innerHTML = text;
+      }
+
+      function escapeHtml(s) {
+        return String(s).replace(/[&<>"']/g, function (c) {
+          return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+        });
+      }
+
+      var APPLE_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M9 3v10.3A3.5 3.5 0 1 0 11 16.5V7h7V3H9z"/></svg>';
+      var SPOTIFY_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm4.59 14.42a.62.62 0 0 1-.86.21c-2.35-1.44-5.3-1.76-8.78-.96a.62.62 0 1 1-.28-1.22c3.81-.87 7.08-.5 9.71 1.12.3.18.39.57.21.85zm1.22-2.72a.78.78 0 0 1-1.07.26c-2.69-1.65-6.79-2.13-9.97-1.17a.78.78 0 1 1-.45-1.49c3.63-1.1 8.15-.57 11.23 1.33.37.23.49.71.26 1.07zm.11-2.84C14.69 8.95 9.37 8.78 6.3 9.71a.94.94 0 1 1-.54-1.79c3.53-1.07 9.4-.86 13.11 1.34a.94.94 0 1 1-.95 1.6z"/></svg>';
+
+      function appleSearchUrl(title, artist) {
+        var q = (title + ' ' + artist).trim();
+        return 'https://music.apple.com/search?term=' + encodeURIComponent(q);
+      }
+
+      function spotifySearchUrl(title, artist) {
+        var q = (title + ' ' + artist).trim();
+        return 'https://open.spotify.com/search/' + encodeURIComponent(q);
+      }
+
+      function themeList(items, animeUrl) {
+        if (!items || !items.length) return '<span class="none">&mdash;</span>';
+        return '<ul>' + items.map(function (t) {
+          var titleHtml = animeUrl
+            ? '<a class="song" href="' + escapeHtml(animeUrl) + '" target="_blank" rel="noopener">&ldquo;' + escapeHtml(t.title) + '&rdquo;</a>'
+            : '&ldquo;' + escapeHtml(t.title) + '&rdquo;';
+          var artistHtml = t.artist ? ' <span class="artist">by ' + escapeHtml(t.artist) + '</span>' : '';
+          var appleHtml = ' <a class="stream" href="' + escapeHtml(appleSearchUrl(t.title, t.artist)) +
+            '" target="_blank" rel="noopener" title="Search on Apple Music" aria-label="Search on Apple Music">' + APPLE_ICON + '</a>';
+          var spotifyHtml = '<a class="stream" href="' + escapeHtml(spotifySearchUrl(t.title, t.artist)) +
+            '" target="_blank" rel="noopener" title="Search on Spotify" aria-label="Search on Spotify">' + SPOTIFY_ICON + '</a>';
+          var slugHtml = t.slug ? ' <span class="eps">(' + escapeHtml(t.slug) + ')</span>' : '';
+          return '<li>' + titleHtml + artistHtml + appleHtml + spotifyHtml + slugHtml + '</li>';
+        }).join('') + '</ul>';
+      }
+
+      function renderEmpty(msg) {
+        rowsEl.innerHTML = '<tr><td colspan="6" class="empty">' + escapeHtml(msg) + '</td></tr>';
+      }
+
+      function renderRows(list) {
+        if (!list.length) { renderEmpty('No results.'); return; }
+        var html = list.map(function (a, i) {
+          var score = (typeof a.score === 'number') ? (a.score / 10).toFixed(2) : '&mdash;';
+          var meta = [a.type, a.episodes ? (a.episodes + ' eps') : ''].filter(Boolean).join(' &middot; ');
+          return '<tr>' +
+            '<td class="rank">' + (i + 1) + '</td>' +
+            '<td class="cover">' + (a.cover ? '<img loading="lazy" src="' + escapeHtml(a.cover) + '" alt="">' : '') + '</td>' +
+            '<td class="title">' +
+              '<a href="' + escapeHtml(a.url) + '" target="_blank" rel="noopener">' + escapeHtml(a.title) + '</a>' +
+              (meta ? '<div class="meta">' + meta + '</div>' : '') +
+            '</td>' +
+            '<td class="score">' + score + '</td>' +
+            '<td class="themes">' + themeList(a.openings, a.url) + '</td>' +
+            '<td class="themes">' + themeList(a.endings, a.url) + '</td>' +
+          '</tr>';
+        }).join('');
+        rowsEl.innerHTML = html;
+      }
+
+      async function fetchAniListPage(year, format, page) {
+        var hasFmt = !!format;
+        var query =
+          'query (' + (hasFmt ? '$f: MediaFormat, ' : '') + '$y: Int, $p: Int) {' +
+            'Page(page: $p, perPage: ' + ANILIST_PAGE + ') {' +
+              'pageInfo { hasNextPage }' +
+              'media(seasonYear: $y, type: ANIME' + (hasFmt ? ', format: $f' : '') + ', sort: SCORE_DESC) {' +
+                'idMal averageScore episodes siteUrl ' +
+                'format title { romaji english } coverImage { medium }' +
+              '}' +
+            '}' +
+          '}';
+        var vars = { y: year, p: page };
+        if (hasFmt) vars.f = format;
+        var res = await fetch(ANILIST, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify({ query: query, variables: vars })
+        });
+        if (res.status === 429) { await sleep(1500); return fetchAniListPage(year, format, page); }
+        if (!res.ok) throw new Error('AniList HTTP ' + res.status);
+        var json = await res.json();
+        if (json.errors) throw new Error('AniList: ' + json.errors[0].message);
+        return json.data.Page;
+      }
+
+      async function fetchThemesForYear(year) {
+        var map = {};
+        for (var page = 1; page <= 10; page++) {
+          var qs = new URLSearchParams();
+          qs.set('filter[year]', String(year));
+          qs.set('page[size]', String(THEMES_PAGE));
+          qs.set('page[number]', String(page));
+          qs.set('include', 'animethemes.song.artists,resources');
+          qs.set('fields[anime]', 'name');
+          qs.set('fields[animetheme]', 'type,slug');
+          qs.set('fields[song]', 'title');
+          qs.set('fields[artist]', 'name');
+          qs.set('fields[resource]', 'site,external_id');
+          var res = await fetch(THEMES + '/anime?' + qs.toString());
+          if (!res.ok) throw new Error('AnimeThemes HTTP ' + res.status);
+          var json = await res.json();
+          var batch = json.anime || [];
+          batch.forEach(function (a) {
+            var mal = (a.resources || []).find(function (r) { return r.site === 'MyAnimeList'; });
+            if (!mal) return;
+            var ops = [], eds = [];
+            (a.animethemes || []).forEach(function (t) {
+              if (!t.song || !t.song.title) return;
+              var artist = (t.song.artists || []).map(function (ar) { return ar.name; }).join(', ');
+              var entry = { title: t.song.title, artist: artist, slug: t.slug || '' };
+              if (t.type === 'OP') ops.push(entry);
+              else if (t.type === 'ED') eds.push(entry);
+            });
+            map[mal.external_id] = { ops: ops, eds: eds };
+          });
+          if (batch.length < THEMES_PAGE) break;
+          await sleep(150);
+        }
+        return map;
+      }
+
+      function pickTitle(t) {
+        if (!t) return 'Untitled';
+        return t.english || t.romaji || 'Untitled';
+      }
+
+      function malUrl(idMal, fallback) {
+        return idMal ? ('https://myanimelist.net/anime/' + idMal) : (fallback || '#');
+      }
+
+      async function run() {
+        var year = parseInt(yearInput.value, 10);
+        if (!year || year < 1960 || year > 2100) {
+          setStatus('Enter a valid year.', true);
+          return;
+        }
+        var format = FORMAT_MAP[typeSelect.value] || '';
+        var token = ++runToken;
+        goBtn.disabled = true;
+        rowsEl.innerHTML = '<tr><td colspan="6" class="empty"><span class="spinner"></span>Loading&hellip;</td></tr>';
+
+        try {
+          setStatus('<span class="spinner"></span>Fetching rankings from AniList&hellip;');
+          var anilist = [];
+          for (var p = 1; p <= Math.ceil(TOTAL / ANILIST_PAGE); p++) {
+            var pageData = await fetchAniListPage(year, format, p);
+            if (token !== runToken) return;
+            anilist = anilist.concat(pageData.media || []);
+            if (!pageData.pageInfo || !pageData.pageInfo.hasNextPage) break;
+            await sleep(150);
+          }
+          anilist = anilist.slice(0, TOTAL);
+
+          setStatus('<span class="spinner"></span>Fetching themes from AnimeThemes&hellip;');
+          var themeMap = await fetchThemesForYear(year);
+          if (token !== runToken) return;
+
+          var rows = anilist.map(function (m) {
+            var themes = themeMap[m.idMal] || { ops: [], eds: [] };
+            return {
+              title: pickTitle(m.title),
+              cover: m.coverImage && m.coverImage.medium || '',
+              url: malUrl(m.idMal, m.siteUrl),
+              score: m.averageScore,
+              type: m.format || '',
+              episodes: m.episodes || 0,
+              openings: themes.ops,
+              endings: themes.eds
+            };
+          });
+
+          renderRows(rows);
+          var withThemes = rows.filter(function (r) { return r.openings.length || r.endings.length; }).length;
+          setStatus('Showing ' + rows.length + ' entries for ' + year + ' &middot; themes found for ' + withThemes + '.');
+        } catch (err) {
+          if (token !== runToken) return;
+          setStatus('Error: ' + err.message, true);
+          renderEmpty('Failed to load. Try again.');
+        } finally {
+          goBtn.disabled = false;
+        }
+      }
+
+      goBtn.addEventListener('click', run);
+      yearInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') run(); });
+    })();
+  </script>
+</body>
+</html>
