@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0f0f1e">
+  <title>QR Code Music Game</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iNSIgZmlsbD0iI2U5NDU2MCIvPjxyZWN0IHg9IjMiIHk9IjMiIHdpZHRoPSI5IiBoZWlnaHQ9IjkiIGZpbGw9IiNmZmYiLz48cmVjdCB4PSI0LjUiIHk9IjQuNSIgd2lkdGg9IjYiIGhlaWdodD0iNiIgZmlsbD0iI2U5NDU2MCIvPjxyZWN0IHg9IjYiIHk9IjYiIHdpZHRoPSIzIiBoZWlnaHQ9IjMiIGZpbGw9IiNmZmYiLz48cmVjdCB4PSIyMCIgeT0iMyIgd2lkdGg9IjkiIGhlaWdodD0iOSIgZmlsbD0iI2ZmZiIvPjxyZWN0IHg9IjIxLjUiIHk9IjQuNSIgd2lkdGg9IjYiIGhlaWdodD0iNiIgZmlsbD0iI2U5NDU2MCIvPjxyZWN0IHg9IjIzIiB5PSI2IiB3aWR0aD0iMyIgaGVpZ2h0PSIzIiBmaWxsPSIjZmZmIi8+PHJlY3QgeD0iMyIgeT0iMjAiIHdpZHRoPSI5IiBoZWlnaHQ9IjkiIGZpbGw9IiNmZmYiLz48cmVjdCB4PSI0LjUiIHk9IjIxLjUiIHdpZHRoPSI2IiBoZWlnaHQ9IjYiIGZpbGw9IiNlOTQ1NjAiLz48cmVjdCB4PSI2IiB5PSIyMyIgd2lkdGg9IjMiIGhlaWdodD0iMyIgZmlsbD0iI2ZmZiIvPjxyZWN0IHg9IjE0IiB5PSI0IiB3aWR0aD0iMiIgaGVpZ2h0PSIyIiBmaWxsPSIjZmZmIi8+PHJlY3QgeD0iMTciIHk9IjciIHdpZHRoPSIyIiBoZWlnaHQ9IjIiIGZpbGw9IiNmZmYiLz48cmVjdCB4PSIxNCIgeT0iMTAiIHdpZHRoPSIyIiBoZWlnaHQ9IjIiIGZpbGw9IiNmZmYiLz48cmVjdCB4PSI0IiB5PSIxNCIgd2lkdGg9IjIiIGhlaWdodD0iMiIgZmlsbD0iI2ZmZiIvPjxyZWN0IHg9IjciIHk9IjE3IiB3aWR0aD0iMiIgaGVpZ2h0PSIyIiBmaWxsPSIjZmZmIi8+PHJlY3QgeD0iMTAiIHk9IjE0IiB3aWR0aD0iMiIgaGVpZ2h0PSIyIiBmaWxsPSIjZmZmIi8+PHJlY3QgeD0iMTQiIHk9IjE0IiB3aWR0aD0iMiIgaGVpZ2h0PSIyIiBmaWxsPSIjZmZmIi8+PHJlY3QgeD0iMTciIHk9IjE3IiB3aWR0aD0iMiIgaGVpZ2h0PSIyIiBmaWxsPSIjZmZmIi8+PHJlY3QgeD0iMjAiIHk9IjE0IiB3aWR0aD0iMiIgaGVpZ2h0PSIyIiBmaWxsPSIjZmZmIi8+PHJlY3QgeD0iMjMiIHk9IjE3IiB3aWR0aD0iMiIgaGVpZ2h0PSIyIiBmaWxsPSIjZmZmIi8+PHJlY3QgeD0iMjYiIHk9IjE0IiB3aWR0aD0iMiIgaGVpZ2h0PSIyIiBmaWxsPSIjZmZmIi8+PHJlY3QgeD0iMTQiIHk9IjIwIiB3aWR0aD0iMiIgaGVpZ2h0PSIyIiBmaWxsPSIjZmZmIi8+PHJlY3QgeD0iMTciIHk9IjIzIiB3aWR0aD0iMiIgaGVpZ2h0PSIyIiBmaWxsPSIjZmZmIi8+PHJlY3QgeD0iMTQiIHk9IjI2IiB3aWR0aD0iMiIgaGVpZ2h0PSIyIiBmaWxsPSIjZmZmIi8+PHJlY3QgeD0iMjAiIHk9IjIwIiB3aWR0aD0iMiIgaGVpZ2h0PSIyIiBmaWxsPSIjZmZmIi8+PHJlY3QgeD0iMjMiIHk9IjIzIiB3aWR0aD0iMiIgaGVpZ2h0PSIyIiBmaWxsPSIjZmZmIi8+PHJlY3QgeD0iMjYiIHk9IjI2IiB3aWR0aD0iMiIgaGVpZ2h0PSIyIiBmaWxsPSIjZmZmIi8+PC9zdmc+">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background: radial-gradient(circle at top, #1f2544 0%, #0f0f1e 100%);
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .app {
+      width: 100%;
+      max-width: 440px;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 18px;
+    }
+    header {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    header h1 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+    header p {
+      font-size: 0.85rem;
+      opacity: 0.6;
+    }
+    .widget {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      border-radius: 20px;
+      overflow: hidden;
+      background: #000;
+      box-shadow: 0 24px 48px rgba(0, 0, 0, 0.5);
+    }
+    .widget::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 20px;
+      pointer-events: none;
+      box-shadow: inset 0 0 0 0 rgba(255, 77, 77, 0);
+      transition: box-shadow 0.2s ease;
+      z-index: 3;
+    }
+    .widget.invalid::after {
+      box-shadow: inset 0 0 0 4px rgba(255, 77, 77, 0.95);
+    }
+    .widget.invalid #qr-reader video { filter: hue-rotate(-30deg) saturate(1.4); }
+    #qr-reader__scan_region > img,
+    #qr-reader__scan_region > div[style*="border"] {
+      border-color: rgba(255, 255, 255, 0.6) !important;
+    }
+    .widget.invalid #qr-reader__scan_region > img,
+    .widget.invalid #qr-reader__scan_region > div[style*="border"] {
+      border-color: #ff4d4d !important;
+      filter: drop-shadow(0 0 6px #ff4d4d);
+    }
+    #qr-reader {
+      width: 100%;
+      height: 100%;
+      background: #000;
+    }
+    #qr-reader video {
+      width: 100% !important;
+      height: 100% !important;
+      object-fit: cover !important;
+    }
+    #qr-reader__dashboard,
+    #qr-reader__header_message,
+    #qr-reader__status_span,
+    #qr-reader__camera_selection,
+    #qr-reader__dashboard_section_csr,
+    #qr-reader__dashboard_section_swaplink { display: none !important; }
+    .art-layer {
+      position: absolute;
+      inset: 0;
+      display: none;
+    }
+    .art-layer.active { display: block; }
+    .art-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: filter 0.6s ease, transform 0.6s ease;
+    }
+    .art-image.blurred {
+      filter: blur(28px) brightness(0.65) saturate(1.2);
+      transform: scale(1.15);
+    }
+    .play-button {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 84px;
+      height: 84px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.95);
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #0f0f1e;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+      transition: transform 0.15s ease, background 0.2s ease;
+    }
+    .play-button:hover { background: #fff; }
+    .play-button:active { transform: translate(-50%, -50%) scale(0.94); }
+    .play-button svg { width: 32px; height: 32px; }
+    .play-button[data-playing="true"] svg.icon-play { display: none; }
+    .play-button[data-playing="false"] svg.icon-pause { display: none; }
+    .song-info {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 4px;
+      padding: 0 8px;
+      min-height: 2.8em;
+      visibility: hidden;
+    }
+    .song-info.active { visibility: visible; }
+    .song-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      line-height: 1.3;
+    }
+    .song-artist {
+      font-size: 0.95rem;
+      opacity: 0.7;
+    }
+    .action-button {
+      width: 100%;
+      padding: 16px;
+      border-radius: 14px;
+      border: none;
+      background: linear-gradient(135deg, #e94560 0%, #c93353 100%);
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.1s ease, filter 0.2s ease;
+      visibility: hidden;
+    }
+    .action-button.active { visibility: visible; }
+    .action-button:hover { filter: brightness(1.1); }
+    .action-button:active { transform: scale(0.98); }
+    .status {
+      min-height: 1.2em;
+      text-align: center;
+      font-size: 0.85rem;
+      opacity: 0.65;
+    }
+    .status.error { color: #ff8a8a; opacity: 0.9; }
+    #spotify-mount {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+    }
+    #spotify-mount iframe { width: 100%; height: 100%; border: 0; }
+    .art-layer { z-index: 1; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <h1>QR Code Music Game</h1>
+      <p>Scan a Spotify or Apple Music QR code</p>
+    </header>
+
+    <div class="widget" id="widget">
+      <div id="qr-reader"></div>
+      <div class="art-layer" id="art-layer">
+        <img class="art-image blurred" id="art-image" alt="">
+        <button class="play-button" id="play-button" data-playing="false" aria-label="Play preview">
+          <svg class="icon-play" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+          <svg class="icon-pause" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14H6zm8 0h4v14h-4z"/></svg>
+        </button>
+      </div>
+      <div id="spotify-mount"></div>
+    </div>
+
+    <div class="song-info" id="song-info">
+      <div class="song-title" id="song-title"></div>
+      <div class="song-artist" id="song-artist"></div>
+    </div>
+
+    <button class="action-button" id="action-button">Reveal</button>
+
+    <div class="status" id="status">Point your camera at a QR code</div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <script src="https://open.spotify.com/embed/iframe-api/v1" async></script>
+  <script>
+    const widget = document.getElementById('widget');
+    const qrReaderEl = document.getElementById('qr-reader');
+    const artLayer = document.getElementById('art-layer');
+    const artImage = document.getElementById('art-image');
+    const playButton = document.getElementById('play-button');
+    const songInfo = document.getElementById('song-info');
+    const songTitleEl = document.getElementById('song-title');
+    const songArtistEl = document.getElementById('song-artist');
+    const actionButton = document.getElementById('action-button');
+    const statusEl = document.getElementById('status');
+    const spotifyMount = document.getElementById('spotify-mount');
+
+    let state = 'scanning'; // 'scanning' | 'scanned' | 'revealed'
+    let qr = null;
+    let current = null;
+    let audio = null;
+    let spotifyApi = null;
+    let spotifyController = null;
+    let spotifyReady = null;
+    let pendingSpotifyUri = null;
+    let lastRejectedCode = null;
+    let lastRejectedAt = 0;
+    let invalidResetTimer = null;
+
+    spotifyReady = new Promise((resolve) => {
+      window.onSpotifyIframeApiReady = (api) => {
+        spotifyApi = api;
+        resolve(api);
+      };
+    });
+
+    function setStatus(msg, isError = false) {
+      statusEl.textContent = msg;
+      statusEl.classList.toggle('error', isError);
+    }
+
+    function showPlayButton(show) {
+      playButton.style.display = show ? 'flex' : 'none';
+    }
+
+    async function startScanner() {
+      state = 'scanning';
+      current = null;
+      clearInvalid();
+      stopAudio();
+      destroySpotifyController();
+      artImage.src = '';
+      artImage.classList.add('blurred');
+      artLayer.classList.remove('active');
+      songInfo.classList.remove('active');
+      actionButton.classList.remove('active');
+      showPlayButton(true);
+      playButton.dataset.playing = 'false';
+      qrReaderEl.style.display = 'block';
+      setStatus('Point your camera at a QR code');
+
+      if (!qr) qr = new Html5Qrcode('qr-reader', { verbose: false });
+      try {
+        await qr.start(
+          { facingMode: 'environment' },
+          { fps: 10, qrbox: { width: 240, height: 240 }, aspectRatio: 1.0 },
+          onScan,
+          () => {}
+        );
+      } catch (err) {
+        setStatus('Camera unavailable. Check permissions.', true);
+      }
+    }
+
+    async function stopScanner() {
+      if (!qr) return;
+      try {
+        if (qr.isScanning) await qr.stop();
+      } catch (e) {}
+    }
+
+    async function onScan(text) {
+      const trimmed = text.trim();
+      const { matched, song } = await parseLink(trimmed);
+      if (!song) {
+        flashInvalid(trimmed, matched);
+        return;
+      }
+      clearInvalid();
+      await stopScanner();
+      current = song;
+      await showScanned(song);
+    }
+
+    function flashInvalid(code, matched) {
+      const now = Date.now();
+      if (code === lastRejectedCode && now - lastRejectedAt < 1500) return;
+      lastRejectedCode = code;
+      lastRejectedAt = now;
+      widget.classList.add('invalid');
+      if (!matched) setStatus('Not a Spotify or Apple Music link', true);
+      if (invalidResetTimer) clearTimeout(invalidResetTimer);
+      invalidResetTimer = setTimeout(() => {
+        if (state === 'scanning') {
+          widget.classList.remove('invalid');
+          setStatus('Point your camera at a QR code');
+        }
+      }, 1500);
+    }
+
+    function clearInvalid() {
+      widget.classList.remove('invalid');
+      if (invalidResetTimer) { clearTimeout(invalidResetTimer); invalidResetTimer = null; }
+      lastRejectedCode = null;
+    }
+
+    async function parseLink(url) {
+      console.log('[scan] parsing', url);
+      const spotify = url.match(/open\.spotify\.com\/(?:intl-[a-z]+\/)?track\/([a-zA-Z0-9]+)/);
+      if (spotify) {
+        const song = await fetchSpotify(spotify[1]);
+        return { matched: true, song };
+      }
+      const apple = url.match(/music\.apple\.com\/[^\s]*[?&]i=(\d+)/)
+                 || url.match(/music\.apple\.com\/[^\/\s]+\/song\/[^\/]+\/(\d+)/);
+      if (apple) {
+        const song = await fetchApple(apple[1]);
+        return { matched: true, song };
+      }
+      return { matched: false, song: null };
+    }
+
+    async function fetchSpotify(id) {
+      try {
+        const res = await fetch(`https://open.spotify.com/oembed?url=https://open.spotify.com/track/${id}`);
+        if (!res.ok) throw new Error('oembed failed');
+        const data = await res.json();
+        const raw = data.title || '';
+        const sep = raw.match(/\s[·—–-]\s/);
+        let title = raw;
+        let artist = '';
+        if (sep) {
+          const idx = raw.indexOf(sep[0]);
+          title = raw.slice(0, idx).trim();
+          artist = raw.slice(idx + sep[0].length).trim();
+        }
+        return {
+          source: 'spotify',
+          id,
+          title,
+          artist,
+          artwork: data.thumbnail_url,
+          uri: `spotify:track:${id}`
+        };
+      } catch (e) {
+        setStatus('Could not load Spotify track', true);
+        return null;
+      }
+    }
+
+    function itunesJsonp(id) {
+      return new Promise((resolve, reject) => {
+        const cb = `__itunes_cb_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+        const script = document.createElement('script');
+        const timeout = setTimeout(() => {
+          cleanup();
+          reject(new Error('timeout'));
+        }, 8000);
+        const cleanup = () => {
+          clearTimeout(timeout);
+          delete window[cb];
+          script.remove();
+        };
+        window[cb] = (data) => { cleanup(); resolve(data); };
+        script.onerror = () => { cleanup(); reject(new Error('script load failed')); };
+        script.src = `https://itunes.apple.com/lookup?id=${encodeURIComponent(id)}&entity=song&callback=${cb}`;
+        document.head.appendChild(script);
+      });
+    }
+
+    async function fetchApple(id) {
+      let data;
+      try {
+        data = await itunesJsonp(id);
+      } catch (e) {
+        console.error('[apple] JSONP failed', e);
+        setStatus('Network error reaching iTunes', true);
+        return null;
+      }
+      const t = (data.results && data.results.find(r => r.kind === 'song')) || data.results?.[0];
+      if (!t) {
+        console.warn('[apple] no results for id', id, data);
+        setStatus('Track not in iTunes catalog (Apple Music exclusive?)', true);
+        return null;
+      }
+      const art = (t.artworkUrl100 || '').replace('100x100', '600x600');
+      return {
+        source: 'apple',
+        id,
+        title: t.trackName,
+        artist: t.artistName,
+        artwork: art,
+        previewUrl: t.previewUrl || null
+      };
+    }
+
+    async function showScanned(song) {
+      state = 'scanned';
+      await loadImage(song.artwork);
+      artImage.src = song.artwork;
+      artImage.classList.add('blurred');
+      qrReaderEl.style.display = 'none';
+      artLayer.classList.add('active');
+      actionButton.textContent = 'Reveal';
+      actionButton.classList.add('active');
+      playButton.dataset.playing = 'false';
+      showPlayButton(true);
+
+      if (song.source === 'spotify') {
+        setStatus('Loading preview…');
+        await prepareSpotify(song.uri);
+        setStatus('Tap play to preview');
+      } else if (song.source === 'apple') {
+        if (!song.previewUrl) {
+          setStatus('No preview available for this track', true);
+          showPlayButton(false);
+        } else {
+          setStatus('Tap play to preview');
+        }
+      }
+    }
+
+    function loadImage(src) {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = img.onerror = () => resolve();
+        img.src = src;
+      });
+    }
+
+    async function prepareSpotify(uri) {
+      await spotifyReady;
+      destroySpotifyController();
+      spotifyMount.innerHTML = '<div id="spotify-embed-el"></div>';
+      const el = document.getElementById('spotify-embed-el');
+      return new Promise((resolve) => {
+        spotifyApi.createController(el, { uri, width: '100%', height: '100%' }, (ctrl) => {
+          spotifyController = ctrl;
+          ctrl.addListener('playback_update', (e) => {
+            if (!e || !e.data) return;
+            playButton.dataset.playing = e.data.isPaused ? 'false' : 'true';
+          });
+          resolve();
+        });
+      });
+    }
+
+    function destroySpotifyController() {
+      if (spotifyController) {
+        try { spotifyController.destroy(); } catch (e) {}
+        spotifyController = null;
+      }
+      spotifyMount.innerHTML = '';
+    }
+
+    function stopAudio() {
+      if (audio) {
+        audio.pause();
+        audio.src = '';
+        audio = null;
+      }
+    }
+
+    playButton.addEventListener('click', async () => {
+      if (!current) return;
+      if (current.source === 'apple') {
+        if (!current.previewUrl) return;
+        if (!audio) {
+          audio = new Audio(current.previewUrl);
+          audio.addEventListener('ended', () => { playButton.dataset.playing = 'false'; });
+          audio.addEventListener('pause', () => { playButton.dataset.playing = 'false'; });
+          audio.addEventListener('play', () => { playButton.dataset.playing = 'true'; });
+        }
+        if (audio.paused) {
+          try { await audio.play(); } catch (e) { setStatus('Playback blocked', true); }
+        } else {
+          audio.pause();
+        }
+      } else if (current.source === 'spotify') {
+        if (!spotifyController) return;
+        try { spotifyController.togglePlay(); } catch (e) {}
+      }
+    });
+
+    actionButton.addEventListener('click', async () => {
+      if (state === 'scanned') {
+        state = 'revealed';
+        artImage.classList.remove('blurred');
+        showPlayButton(false);
+        songTitleEl.textContent = current.title || '';
+        songArtistEl.textContent = current.artist || '';
+        songInfo.classList.add('active');
+        actionButton.textContent = 'Scan Again';
+        setStatus('');
+        if (audio) audio.pause();
+        if (spotifyController) { try { spotifyController.pause(); } catch (e) {} }
+      } else if (state === 'revealed') {
+        await startScanner();
+      }
+    });
+
+    startScanner();
+  </script>
+</body>
+</html>
