@@ -107,6 +107,7 @@
     .title a:hover { color: var(--accent); }
     .title .meta { color: var(--muted); font-size: 0.8rem; margin-top: 0.15rem; }
     .score { color: var(--accent); font-weight: 600; font-variant-numeric: tabular-nums; }
+    .pop { color: var(--muted); font-variant-numeric: tabular-nums; }
     .themes ul { list-style: none; margin: 0; padding: 0; }
     .themes li { padding: 0.1rem 0; color: var(--text); font-size: 0.88rem; }
     .themes li + li { border-top: 1px dashed rgba(140, 150, 173, 0.15); margin-top: 0.1rem; padding-top: 0.2rem; }
@@ -178,6 +179,11 @@
         <option value="ona">ONA</option>
         <option value="special">Special</option>
       </select>
+      <label for="sortSelect">Sort by</label>
+      <select id="sortSelect">
+        <option value="SCORE_DESC" selected>Rating</option>
+        <option value="POPULARITY_DESC">Popularity</option>
+      </select>
       <button id="goBtn" class="btn" type="button">Generate</button>
       <span id="status" class="status"></span>
     </div>
@@ -190,12 +196,13 @@
             <th class="cover-h">Cover</th>
             <th>Title</th>
             <th>Score</th>
+            <th>Popularity</th>
             <th>Openings</th>
             <th>Endings</th>
           </tr>
         </thead>
         <tbody id="rows">
-          <tr><td colspan="6" class="empty">Pick a year and click Generate.</td></tr>
+          <tr><td colspan="7" class="empty">Pick a year and click Generate.</td></tr>
         </tbody>
       </table>
     </div>
@@ -226,6 +233,7 @@
       var FORMAT_MAP = { tv: 'TV', movie: 'MOVIE', ova: 'OVA', ona: 'ONA', special: 'SPECIAL' };
       var yearInput = document.getElementById('yearInput');
       var typeSelect = document.getElementById('typeSelect');
+      var sortSelect = document.getElementById('sortSelect');
       var goBtn = document.getElementById('goBtn');
       var statusEl = document.getElementById('status');
       var rowsEl = document.getElementById('rows');
@@ -277,7 +285,7 @@
       }
 
       function renderEmpty(msg) {
-        rowsEl.innerHTML = '<tr><td colspan="6" class="empty">' + escapeHtml(msg) + '</td></tr>';
+        rowsEl.innerHTML = '<tr><td colspan="7" class="empty">' + escapeHtml(msg) + '</td></tr>';
       }
 
       function renderRows(list) {
@@ -293,6 +301,7 @@
               (meta ? '<div class="meta">' + meta + '</div>' : '') +
             '</td>' +
             '<td class="score">' + score + '</td>' +
+            '<td class="pop">' + (a.popularity ? a.popularity.toLocaleString() : '&mdash;') + '</td>' +
             '<td class="themes">' + themeList(a.openings, a.url) + '</td>' +
             '<td class="themes">' + themeList(a.endings, a.url) + '</td>' +
           '</tr>';
@@ -300,14 +309,14 @@
         rowsEl.innerHTML = html;
       }
 
-      async function fetchAniListPage(year, format, page) {
+      async function fetchAniListPage(year, format, sort, page) {
         var hasFmt = !!format;
         var query =
           'query (' + (hasFmt ? '$f: MediaFormat, ' : '') + '$y: Int, $p: Int) {' +
             'Page(page: $p, perPage: ' + ANILIST_PAGE + ') {' +
               'pageInfo { hasNextPage }' +
-              'media(seasonYear: $y, type: ANIME' + (hasFmt ? ', format: $f' : '') + ', sort: SCORE_DESC) {' +
-                'idMal averageScore episodes siteUrl ' +
+              'media(seasonYear: $y, type: ANIME' + (hasFmt ? ', format: $f' : '') + ', sort: ' + sort + ') {' +
+                'idMal averageScore popularity episodes siteUrl ' +
                 'format title { romaji english } coverImage { medium }' +
               '}' +
             '}' +
@@ -319,7 +328,7 @@
           headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
           body: JSON.stringify({ query: query, variables: vars })
         });
-        if (res.status === 429) { await sleep(1500); return fetchAniListPage(year, format, page); }
+        if (res.status === 429) { await sleep(1500); return fetchAniListPage(year, format, sort, page); }
         if (!res.ok) throw new Error('AniList HTTP ' + res.status);
         var json = await res.json();
         if (json.errors) throw new Error('AniList: ' + json.errors[0].message);
@@ -378,15 +387,16 @@
           return;
         }
         var format = FORMAT_MAP[typeSelect.value] || '';
+        var sort = sortSelect.value === 'POPULARITY_DESC' ? 'POPULARITY_DESC' : 'SCORE_DESC';
         var token = ++runToken;
         goBtn.disabled = true;
-        rowsEl.innerHTML = '<tr><td colspan="6" class="empty"><span class="spinner"></span>Loading&hellip;</td></tr>';
+        rowsEl.innerHTML = '<tr><td colspan="7" class="empty"><span class="spinner"></span>Loading&hellip;</td></tr>';
 
         try {
           setStatus('<span class="spinner"></span>Fetching rankings from AniList&hellip;');
           var anilist = [];
           for (var p = 1; p <= Math.ceil(TOTAL / ANILIST_PAGE); p++) {
-            var pageData = await fetchAniListPage(year, format, p);
+            var pageData = await fetchAniListPage(year, format, sort, p);
             if (token !== runToken) return;
             anilist = anilist.concat(pageData.media || []);
             if (!pageData.pageInfo || !pageData.pageInfo.hasNextPage) break;
@@ -405,6 +415,7 @@
               cover: m.coverImage && m.coverImage.medium || '',
               url: malUrl(m.idMal, m.siteUrl),
               score: m.averageScore,
+              popularity: m.popularity,
               type: m.format || '',
               episodes: m.episodes || 0,
               openings: themes.ops,
